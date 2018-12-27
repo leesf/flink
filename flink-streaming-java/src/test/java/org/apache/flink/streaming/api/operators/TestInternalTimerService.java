@@ -39,6 +39,10 @@ public class TestInternalTimerService<K, N> implements InternalTimerService<N> {
 
 	private final KeyContext keyContext;
 
+	public KeyContext getKeyContext() {
+		return keyContext;
+	}
+
 	/**
 	 * Processing time timers that are currently in-flight.
 	 */

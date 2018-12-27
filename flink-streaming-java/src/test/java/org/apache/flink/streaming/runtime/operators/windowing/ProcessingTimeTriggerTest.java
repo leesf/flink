@@ -45,10 +45,13 @@ public class ProcessingTimeTriggerTest {
 
 		// inject several elements
 		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(1), new TimeWindow(0, 2)));
-		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(1), new TimeWindow(0, 2)));
-		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(1), new TimeWindow(0, 2)));
-		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(1), new TimeWindow(2, 4)));
-		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(1), new TimeWindow(2, 4)));
+		testHarness.getInternalTimerService().getKeyContext().setCurrentKey(12);
+		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(0), new TimeWindow(0, 2)));
+		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(2), new TimeWindow(0, 2)));
+		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(3), new TimeWindow(2, 4)));
+		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(4), new TimeWindow(2, 4)));
+		assertEquals(TriggerResult.CONTINUE, testHarness.processElement(new StreamRecord<Object>(0), new TimeWindow(2, 4)));
+
 
 		assertEquals(0, testHarness.numStateEntries());
 		assertEquals(0, testHarness.numEventTimeTimers());

@@ -22,8 +22,12 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.examples.wordcount.util.WordCountData;
 import org.apache.flink.util.Collector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements the "WordCount" program that computes a simple word occurrence
@@ -47,7 +51,7 @@ public class WordCount {
 	// *************************************************************************
 	// PROGRAM
 	// *************************************************************************
-
+	final static Logger LOGGER = LoggerFactory.getLogger(WordCount.class);
 	public static void main(String[] args) throws Exception {
 
 		// Checking input parameters
@@ -68,7 +72,25 @@ public class WordCount {
 			System.out.println("Executing WordCount example with default input data set.");
 			System.out.println("Use --input to specify file input.");
 			// get default test text data
-			text = env.fromElements(WordCountData.WORDS);
+			//text = env.fromElements(WordCountData.WORDS);
+			text = env.addSource(new SourceFunction<String>() {
+				@Override public void run(SourceContext<String> ctx)
+					throws Exception {
+					while (true) {
+						for (int i = 0; i < WordCountData.WORDS.length; i++) {
+							String data = WordCountData.WORDS[i];
+							ctx.collect(data);
+							try {
+								Thread.sleep(1000);
+							} catch (Exception e) {}
+						}
+					}
+				}
+
+				@Override public void cancel() {
+
+				}
+			});
 		}
 
 		DataStream<Tuple2<String, Integer>> counts =
@@ -82,7 +104,12 @@ public class WordCount {
 			counts.writeAsText(params.get("output"));
 		} else {
 			System.out.println("Printing result to stdout. Use --output to specify output path.");
-			counts.print();
+			counts.addSink(new SinkFunction<Tuple2<String, Integer>>() {
+				@Override public void invoke(Tuple2<String, Integer> value)
+					throws Exception {
+					LOGGER.info("invoke value is {}", value);
+				}
+			});
 		}
 
 		// execute program

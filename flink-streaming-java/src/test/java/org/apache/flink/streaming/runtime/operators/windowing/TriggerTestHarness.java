@@ -54,13 +54,17 @@ import java.util.Collection;
  */
 public class TriggerTestHarness<T, W extends Window> {
 
-	private static final Integer KEY = 1;
+	private static Integer KEY = 1;
 
 	private final Trigger<T, W> trigger;
 	private final TypeSerializer<W> windowSerializer;
 
 	private final HeapKeyedStateBackend<Integer> stateBackend;
 	private final TestInternalTimerService<Integer, W> internalTimerService;
+
+	public TestInternalTimerService<Integer, W> getInternalTimerService() {
+		return internalTimerService;
+	}
 
 	public TriggerTestHarness(
 			Trigger<T, W> trigger,
@@ -89,6 +93,7 @@ public class TriggerTestHarness<T, W extends Window> {
 			@Override
 			public void setCurrentKey(Object key) {
 				// ignore
+				KEY = (int) key;
 			}
 
 			@Override
@@ -127,8 +132,9 @@ public class TriggerTestHarness<T, W extends Window> {
 	 * {@link Trigger#onElement(Object, long, Window, Trigger.TriggerContext)}.
 	 */
 	public TriggerResult processElement(StreamRecord<T> element, W window) throws Exception {
-		TestTriggerContext<Integer, W> triggerContext = new TestTriggerContext<>(
-				KEY,
+		T ele = element.getValue();
+		TestTriggerContext<T, W> triggerContext = new TestTriggerContext<>(
+			ele,
 				window,
 				internalTimerService,
 				stateBackend,

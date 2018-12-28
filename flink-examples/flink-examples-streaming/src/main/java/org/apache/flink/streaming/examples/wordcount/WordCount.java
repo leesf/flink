@@ -71,6 +71,8 @@ public class WordCount {
 		} else {
 			System.out.println("Executing WordCount example with default input data set.");
 			System.out.println("Use --input to specify file input.");
+			String test = params.get("test");
+			LOGGER.info("test is {}", test);
 			// get default test text data
 			//text = env.fromElements(WordCountData.WORDS);
 			text = env.addSource(new SourceFunction<String>() {
@@ -107,6 +109,7 @@ public class WordCount {
 			counts.addSink(new SinkFunction<Tuple2<String, Integer>>() {
 				@Override public void invoke(Tuple2<String, Integer> value)
 					throws Exception {
+
 					LOGGER.info("invoke value is {}", value);
 				}
 			});

@@ -24,6 +24,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.api.graph.StreamGraphGenerator;
 import org.apache.flink.streaming.examples.wordcount.util.WordCountData;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
@@ -72,12 +73,13 @@ public class WordCount {
 			System.out.println("Executing WordCount example with default input data set.");
 			System.out.println("Use --input to specify file input.");
 			String test = params.get("test");
-			LOGGER.info("test is {}", test);
+
 			// get default test text data
 			//text = env.fromElements(WordCountData.WORDS);
 			text = env.addSource(new SourceFunction<String>() {
 				@Override public void run(SourceContext<String> ctx)
 					throws Exception {
+					LOGGER.info("test is {}", test);
 					while (true) {
 						for (int i = 0; i < WordCountData.WORDS.length; i++) {
 							String data = WordCountData.WORDS[i];
@@ -116,6 +118,7 @@ public class WordCount {
 		}
 
 		// execute program
+		System.out.println(env.getStreamGraph().getStreamingPlanAsJSON());
 		env.execute("Streaming WordCount");
 	}
 

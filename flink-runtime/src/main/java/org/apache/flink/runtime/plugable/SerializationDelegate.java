@@ -59,3 +59,4 @@ public class SerializationDelegate<T> implements IOReadableWritable {
 		throw new IllegalStateException("Deserialization method called on SerializationDelegate.");
 	}
 }
+

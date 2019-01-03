@@ -313,7 +313,7 @@ public class FlinkYarnSessionCli extends AbstractCustomCommandLine<ApplicationId
 		List<File> shipFiles = new ArrayList<>();
 		// path to directory to ship
 		if (cmd.hasOption(shipPath.getOpt())) {
-			String[] shipPaths = cmd.getOptionValues(this.shipPath.getOpt());
+			String shipPath = cmd.getOptionValue(this.shipPath.getOpt());
 			File shipDir = new File(shipPath);
 			if (shipDir.isDirectory()) {
 				shipFiles.add(shipDir);

@@ -20,9 +20,15 @@ package org.apache.flink.streaming.examples.wordcount;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.graph.StreamGraphGenerator;
 import org.apache.flink.streaming.examples.wordcount.util.WordCountData;
@@ -49,6 +55,54 @@ import org.slf4j.LoggerFactory;
  */
 public class WordCount {
 
+	private static class CustomSource extends RichSourceFunction<String> implements
+		CheckpointedFunction {
+
+		@Override public void snapshotState(FunctionSnapshotContext context)
+			throws Exception {
+			LOGGER.info("do snapshotState.");
+		}
+
+		@Override public void initializeState(FunctionInitializationContext context)
+			throws Exception {
+			LOGGER.info("initializeState.");
+		}
+
+		@Override public void run(SourceContext ctx) throws Exception {
+			while (true) {
+				for (int i = 0; i < WordCountData.WORDS.length; i++) {
+					String data = WordCountData.WORDS[i];
+					ctx.collect(data);
+					try {
+						Thread.sleep(1000);
+					} catch (Exception e) {}
+				}
+			}
+		}
+
+		@Override public void cancel() {
+
+		}
+	}
+
+	private static class CustomSink extends RichSinkFunction<Tuple2<String, Integer>> implements CheckpointedFunction {
+
+		@Override public void snapshotState(FunctionSnapshotContext context)
+			throws Exception {
+			LOGGER.info("sink do snapshotState.");
+		}
+
+		@Override public void initializeState(FunctionInitializationContext context)
+			throws Exception {
+			LOGGER.info("sink do initializeState");
+		}
+
+		@Override public void invoke(Tuple2<String, Integer> value, Context context)
+			throws Exception {
+			LOGGER.info("invoke value is {}", value);
+		}
+	}
+
 	// *************************************************************************
 	// PROGRAM
 	// *************************************************************************
@@ -60,6 +114,7 @@ public class WordCount {
 
 		// set up the execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.enableCheckpointing(500);
 
 		// make parameters available in the web interface
 		env.getConfig().setGlobalJobParameters(params);
@@ -76,25 +131,7 @@ public class WordCount {
 
 			// get default test text data
 			//text = env.fromElements(WordCountData.WORDS);
-			text = env.addSource(new SourceFunction<String>() {
-				@Override public void run(SourceContext<String> ctx)
-					throws Exception {
-					LOGGER.info("test is {}", test);
-					while (true) {
-						for (int i = 0; i < WordCountData.WORDS.length; i++) {
-							String data = WordCountData.WORDS[i];
-							ctx.collect(data);
-							try {
-								Thread.sleep(1000);
-							} catch (Exception e) {}
-						}
-					}
-				}
-
-				@Override public void cancel() {
-
-				}
-			});
+			text = env.addSource(new CustomSource());
 		}
 
 		DataStream<Tuple2<String, Integer>> counts =
@@ -108,13 +145,7 @@ public class WordCount {
 			counts.writeAsText(params.get("output"));
 		} else {
 			System.out.println("Printing result to stdout. Use --output to specify output path.");
-			counts.addSink(new SinkFunction<Tuple2<String, Integer>>() {
-				@Override public void invoke(Tuple2<String, Integer> value)
-					throws Exception {
-
-					LOGGER.info("invoke value is {}", value);
-				}
-			});
+			counts.addSink(new CustomSink());
 		}
 
 		// execute program

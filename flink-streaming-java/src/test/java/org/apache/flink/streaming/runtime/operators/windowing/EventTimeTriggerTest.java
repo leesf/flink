@@ -81,7 +81,7 @@ public class EventTimeTriggerTest {
 				new TriggerTestHarness<>(EventTimeTrigger.create(), new TimeWindow.Serializer());
 
 		testHarness.advanceWatermark(2);
-
+		assertEquals(TriggerResult.FIRE, testHarness.processElement(new StreamRecord<Object>(1), new TimeWindow(0, 2)));
 		assertEquals(TriggerResult.FIRE, testHarness.processElement(new StreamRecord<Object>(1), new TimeWindow(0, 2)));
 
 		assertEquals(0, testHarness.numStateEntries());

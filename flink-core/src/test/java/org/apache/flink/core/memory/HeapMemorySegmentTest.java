@@ -52,7 +52,7 @@ public class HeapMemorySegmentTest extends MemorySegmentTestBase {
 	public void testHeapSegmentSpecifics() {
 		final byte[] buffer = new byte[411];
 		HeapMemorySegment seg = new HeapMemorySegment(buffer);
-
+		seg.put(1, (byte)1);
 		assertFalse(seg.isFreed());
 		assertFalse(seg.isOffHeap());
 		assertEquals(buffer.length, seg.size());

@@ -21,6 +21,9 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.optimizer.plantranslate.JobGraphGenerator;
+import org.apache.flink.runtime.jobgraph.JobGraph;
+import org.apache.flink.runtime.jobgraph.JobVertex;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
@@ -31,10 +34,14 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.graph.StreamGraphGenerator;
+import org.apache.flink.streaming.api.graph.StreamNode;
+import org.apache.flink.streaming.api.graph.StreamingJobGraphGenerator;
 import org.apache.flink.streaming.examples.wordcount.util.WordCountData;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 
 /**
  * Implements the "WordCount" program that computes a simple word occurrence
@@ -131,25 +138,32 @@ public class WordCount {
 
 			// get default test text data
 			//text = env.fromElements(WordCountData.WORDS);
-			text = env.addSource(new CustomSource());
+			text = env.addSource(new CustomSource()).setParallelism(1);
+
 		}
 
 		DataStream<Tuple2<String, Integer>> counts =
 			// split up the lines in pairs (2-tuples) containing: (word,1)
-			text.flatMap(new Tokenizer())
+			text.flatMap(new Tokenizer()).setParallelism(2)
 			// group by the tuple field "0" and sum up tuple field "1"
-			.keyBy(0).sum(1);
+			.keyBy(0).sum(1).setParallelism(3);
 
 		// emit result
 		if (params.has("output")) {
 			counts.writeAsText(params.get("output"));
 		} else {
 			System.out.println("Printing result to stdout. Use --output to specify output path.");
-			counts.addSink(new CustomSink());
+			counts.addSink(new CustomSink()).setParallelism(4);
 		}
 
 		// execute program
+
 		System.out.println(env.getStreamGraph().getStreamingPlanAsJSON());
+
+		JobGraph jobGraph = StreamingJobGraphGenerator.createJobGraph(env.getStreamGraph());
+
+
+
 		env.execute("Streaming WordCount");
 	}
 

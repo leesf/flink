@@ -92,6 +92,25 @@ public class WordCount {
 		}
 	}
 
+	private static class CustomSimpleSink extends RichSinkFunction<String> implements CheckpointedFunction {
+
+		@Override public void snapshotState(FunctionSnapshotContext context)
+			throws Exception {
+			LOGGER.info("sink do snapshotState.");
+		}
+
+		@Override public void initializeState(FunctionInitializationContext context)
+			throws Exception {
+
+		}
+
+
+
+		@Override public void invoke(String value, Context context)
+			throws Exception {
+			LOGGER.info("invoke value is {}", value);
+		}
+	}
 	private static class CustomSink extends RichSinkFunction<Tuple2<String, Integer>> implements CheckpointedFunction {
 
 		@Override public void snapshotState(FunctionSnapshotContext context)
@@ -142,19 +161,16 @@ public class WordCount {
 
 		}
 
-		DataStream<Tuple2<String, Integer>> counts =
+		/*DataStream<Tuple2<String, Integer>> counts =
 			// split up the lines in pairs (2-tuples) containing: (word,1)
 			text.flatMap(new Tokenizer()).setParallelism(2)
 			// group by the tuple field "0" and sum up tuple field "1"
-			.keyBy(0).sum(1).setParallelism(3);
+			.keyBy(0).sum(1).setParallelism(3);*/
 
 		// emit result
-		if (params.has("output")) {
-			counts.writeAsText(params.get("output"));
-		} else {
-			System.out.println("Printing result to stdout. Use --output to specify output path.");
-			counts.addSink(new CustomSink()).setParallelism(4);
-		}
+		System.out.println("Printing result to stdout. Use --output to specify output path.");
+		//counts.addSink(new CustomSink()).setParallelism(4);
+		text.addSink(new CustomSimpleSink()).setParallelism(4);
 
 		// execute program
 

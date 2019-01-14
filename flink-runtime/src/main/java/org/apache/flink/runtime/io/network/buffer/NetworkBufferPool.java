@@ -53,20 +53,38 @@ public class NetworkBufferPool implements BufferPoolFactory {
 
 	private static final Logger LOG = LoggerFactory.getLogger(NetworkBufferPool.class);
 
+	/**
+	 * 总共的MemorySegment数量
+	 */
 	private final int totalNumberOfMemorySegments;
 
+	/**
+	 * MemorySegment大小
+	 */
 	private final int memorySegmentSize;
 
+	/**
+	 * 可用的MemorySegment总数
+	 */
 	private final ArrayBlockingQueue<MemorySegment> availableMemorySegments;
 
+	/**
+	 * 缓冲池是否已经被释放
+	 */
 	private volatile boolean isDestroyed;
 
 	// ---- Managed buffer pools ----------------------------------------------
 
 	private final Object factoryLock = new Object();
 
+	/**
+	 * 用于存放所有LocalBufferPool
+	 */
 	private final Set<LocalBufferPool> allBufferPools = new HashSet<>();
 
+	/**
+	 * 所有请求的Buffer总数
+	 */
 	private int numTotalRequiredBuffers;
 
 	/**
@@ -119,6 +137,10 @@ public class NetworkBufferPool implements BufferPoolFactory {
 		return availableMemorySegments.poll();
 	}
 
+	/**
+	 * 归还MemorySegment，将其纳入队列中进行管理
+	 * @param segment
+	 */
 	public void recycle(MemorySegment segment) {
 		// Adds the segment back to the queue, which does not immediately free the memory
 		// however, since this happens when references to the global pool are also released,

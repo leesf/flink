@@ -41,6 +41,9 @@ public class ResultPartitionManager implements ResultPartitionProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ResultPartitionManager.class);
 
+	/**
+	 * 用于管理ResultPartition
+	 */
 	public final Table<ExecutionAttemptID, IntermediateResultPartitionID, ResultPartition>
 			registeredPartitions = HashBasedTable.create();
 

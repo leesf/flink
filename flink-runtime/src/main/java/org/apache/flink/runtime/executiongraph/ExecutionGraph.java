@@ -827,6 +827,9 @@ public class ExecutionGraph implements AccessExecutionGraph {
 			}
 
 			// create the execution job vertex and attach it to the graph
+			/**
+			 * 每一个JobVertex对应一个ExecutionJobVertex
+			 */
 			ExecutionJobVertex ejv = new ExecutionJobVertex(
 				this,
 				jobVertex,

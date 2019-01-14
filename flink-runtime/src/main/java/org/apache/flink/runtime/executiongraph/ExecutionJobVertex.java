@@ -217,6 +217,9 @@ public class ExecutionJobVertex implements AccessExecutionJobVertex, Archiveable
 				JobManagerOptions.MAX_ATTEMPTS_HISTORY_SIZE.defaultValue();
 
 		// create all task vertices
+		/**
+		 * 一个ExecutionJobVertex对应多个ExecutionVertex（并行度）
+		 */
 		for (int i = 0; i < numTaskVertices; i++) {
 			ExecutionVertex vertex = new ExecutionVertex(
 					this,

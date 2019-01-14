@@ -31,5 +31,9 @@ public interface BufferRecycler {
 	 *
 	 * @param memorySegment The memory segment to be recycled.
 	 */
+	/**
+	 * 归还MemorySegment
+	 * @param memorySegment
+	 */
 	void recycle(MemorySegment memorySegment);
 }

@@ -204,12 +204,12 @@ public class WordCountTable {
 		StreamTableEnvironment tableEnvironment = StreamTableEnvironment.getTableEnvironment(streamExecutionEnvironment);
 
 
-		Table table = tableEnvironment.fromDataStream(streamExecutionEnvironment.addSource(new CustomSource()));
+		Table table = tableEnvironment.fromDataStream(streamExecutionEnvironment.addSource(new CustomSource()), "name, address, birth, age, a.proctime");
 
 		tableEnvironment.registerTable("source", table);
 		Table table1 = tableEnvironment.scan("source");
 		//Table selectTable1 = table1.select("name, address, birth, age").groupBy("name, address, birth").select("name, address, birth, sum(age)");
-		Table selectTable = table1/*.groupBy("name, address, birth")*/.select("name, address, birth, age");
+		Table selectTable = table1/*.groupBy("name, address, birth")*/.select("name, address, birth, age, a");
 
 		String[] fieldNames = new String[] {"name", "address", "birth", "age"};
 		List<TypeInformation<?>> fieldTypes = new ArrayList<>();
@@ -229,7 +229,6 @@ public class WordCountTable {
 		selectTable.writeToSink(sinktable);
 		//tableEnvironment.registerTableSink("sink", sinktable);
 		//selectTable.insertInto("sink");
-
 		//tableEnvironment.toRetractStream(tableEnvironment.scan("sink"), WC.class).print();
 
 		streamExecutionEnvironment.execute();

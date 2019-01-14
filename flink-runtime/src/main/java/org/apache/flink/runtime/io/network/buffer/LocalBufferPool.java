@@ -52,6 +52,9 @@ class LocalBufferPool implements BufferPool {
 	private final NetworkBufferPool networkBufferPool;
 
 	/** The minimum number of required segments for this pool. */
+	/**
+	 * 默认为ResultSubPartition个数
+	 */
 	private final int numberOfRequiredMemorySegments;
 
 	/**
@@ -63,6 +66,9 @@ class LocalBufferPool implements BufferPool {
 	 * code inside this class, e.g. with
 	 * {@link org.apache.flink.runtime.io.network.partition.consumer.RemoteInputChannel#bufferQueue}
 	 * via the {@link #registeredListeners} callback.
+	 */
+	/**
+	 * 可用的MemorySegment队列，其大小与numberOfRequiredMemorySegments无关系，当归还MS时，将MS添加至该队列
 	 */
 	private final ArrayDeque<MemorySegment> availableMemorySegments = new ArrayDeque<MemorySegment>();
 
@@ -76,11 +82,17 @@ class LocalBufferPool implements BufferPool {
 	private final int maxNumberOfMemorySegments;
 
 	/** The current size of this pool. */
+	/**
+	 * 默认为ResultSubPartition个数
+	 */
 	private int currentPoolSize;
 
 	/**
 	 * Number of all memory segments, which have been requested from the network buffer pool and are
 	 * somehow referenced through this pool (e.g. wrapped in Buffer instances or as available segments).
+	 */
+	/**
+	 * 请求的MemorySegment总数
 	 */
 	private int numberOfRequestedMemorySegments;
 
@@ -232,8 +244,16 @@ class LocalBufferPool implements BufferPool {
 		return new BufferBuilder(memorySegment, this);
 	}
 
+	/**
+	 * 从队列中弹出MemorySegment
+	 * @param isBlocking	是否阻塞型获取
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
 	private MemorySegment requestMemorySegment(boolean isBlocking) throws InterruptedException, IOException {
 		synchronized (availableMemorySegments) {
+			// 归还过剩的MS
 			returnExcessMemorySegments();
 
 			boolean askToRecycle = owner.isPresent();
@@ -256,7 +276,9 @@ class LocalBufferPool implements BufferPool {
 				if (askToRecycle) {
 					owner.get().releaseMemory(1);
 				}
-
+				/**
+				 * 若为阻塞型获取，那么可以确保一定成功获取到MS
+				 */
 				if (isBlocking) {
 					availableMemorySegments.wait(2000);
 				}
@@ -363,7 +385,9 @@ class LocalBufferPool implements BufferPool {
 			} else {
 				currentPoolSize = numBuffers;
 			}
-
+			/**
+			 * 归还剩余的MemorySegment
+			 */
 			returnExcessMemorySegments();
 
 			numExcessBuffers = numberOfRequestedMemorySegments - currentPoolSize;
@@ -390,7 +414,7 @@ class LocalBufferPool implements BufferPool {
 
 	private void returnMemorySegment(MemorySegment segment) {
 		assert Thread.holdsLock(availableMemorySegments);
-
+		// 请求数减1,并归还MemorySegment至NetworkBufferPool
 		numberOfRequestedMemorySegments--;
 		networkBufferPool.recycle(segment);
 	}
@@ -398,6 +422,10 @@ class LocalBufferPool implements BufferPool {
 	private void returnExcessMemorySegments() {
 		assert Thread.holdsLock(availableMemorySegments);
 
+		/**
+		 * 请求的数量大于当前大小，
+		 * 则从队列中退出一个MS进行归还
+		 */
 		while (numberOfRequestedMemorySegments > currentPoolSize) {
 			MemorySegment segment = availableMemorySegments.poll();
 			if (segment == null) {

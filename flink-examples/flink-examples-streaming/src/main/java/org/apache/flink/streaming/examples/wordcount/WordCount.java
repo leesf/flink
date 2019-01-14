@@ -140,7 +140,7 @@ public class WordCount {
 
 		// set up the execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.enableCheckpointing(500);
+		env.enableCheckpointing(5000);
 
 		// make parameters available in the web interface
 		env.getConfig().setGlobalJobParameters(params);
@@ -170,7 +170,7 @@ public class WordCount {
 		// emit result
 		System.out.println("Printing result to stdout. Use --output to specify output path.");
 		//counts.addSink(new CustomSink()).setParallelism(4);
-		text.addSink(new CustomSimpleSink()).setParallelism(4);
+		text.addSink(new CustomSimpleSink()).setParallelism(2);
 
 		// execute program
 

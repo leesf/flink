@@ -48,6 +48,7 @@ import org.apache.flink.streaming.util.NoOpIntMap;
 
 import org.junit.Test;
 
+import static org.apache.flink.util.Preconditions.checkState;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -61,6 +62,8 @@ public class StreamGraphGeneratorTest {
 
 	@Test
 	public void testBufferTimeout() {
+
+		checkState(!false || true);
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 		env.setBufferTimeout(77); // set timeout to some recognizable number

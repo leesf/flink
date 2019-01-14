@@ -172,6 +172,7 @@ public class StreamInputProcessor<IN> {
 				DeserializationResult result = currentRecordDeserializer.getNextRecord(deserializationDelegate);
 
 				if (result.isBufferConsumed()) {
+					// 归还MemorySegment至LocalBufferPool
 					currentRecordDeserializer.getCurrentBuffer().recycleBuffer();
 					currentRecordDeserializer = null;
 				}

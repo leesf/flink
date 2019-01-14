@@ -86,14 +86,21 @@ public class ResultPartition implements ResultPartitionWriter, BufferPoolOwner {
 
 	private final JobID jobId;
 
+	/** 该ResultPartion的ID*/
 	private final ResultPartitionID partitionId;
 
 	/** Type of this partition. Defines the concrete subpartition implementation to use. */
 	private final ResultPartitionType partitionType;
 
 	/** The subpartitions of this partition. At least one. */
+	/**
+	 * 所有的子ResultSubpartition，至少一个
+	 */
 	private final ResultSubpartition[] subpartitions;
 
+	/**
+	 * 管理ResultPartition
+	 */
 	private final ResultPartitionManager partitionManager;
 
 	private final ResultPartitionConsumableNotifier partitionConsumableNotifier;

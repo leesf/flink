@@ -36,8 +36,13 @@ import java.util.Iterator;
 @PublicEvolving
 public class TimeEvictor<W extends Window> implements Evictor<Object, W> {
 	private static final long serialVersionUID = 1L;
-
+	/**
+	 * 窗口大小
+	 */
 	private final long windowSize;
+	/**
+	 * 在窗口函数被调用之后是否驱逐元素
+	 */
 	private final boolean doEvictAfter;
 
 	public TimeEvictor(long windowSize) {
@@ -65,10 +70,15 @@ public class TimeEvictor<W extends Window> implements Evictor<Object, W> {
 	}
 
 	private void evict(Iterable<TimestampedValue<Object>> elements, int size, EvictorContext ctx) {
+		/**
+		 * 是否有时间属性，若无，则直接返回，即不驱逐
+		 */
 		if (!hasTimestamp(elements)) {
 			return;
 		}
-
+		/**
+		 * 计算驱逐时间，小于驱逐时间的都将被移除（元素时间+窗口大小 < 最大的时间）
+		 */
 		long currentTime = getMaxTimestamp(elements);
 		long evictCutoff = currentTime - windowSize;
 

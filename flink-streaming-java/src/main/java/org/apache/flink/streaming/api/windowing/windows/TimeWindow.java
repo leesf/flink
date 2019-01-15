@@ -38,11 +38,17 @@ import java.util.Set;
 /**
  * A {@link Window} that represents a time interval from {@code start} (inclusive) to
  * {@code end} (exclusive).
+ * 基于时间的窗口
  */
 @PublicEvolving
 public class TimeWindow extends Window {
-
+	/**
+	 * 窗口开始时间，包含
+	 */
 	private final long start;
+	/**
+	 * 窗口结束时间，不包含
+	 */
 	private final long end;
 
 	public TimeWindow(long start, long end) {
@@ -113,6 +119,7 @@ public class TimeWindow extends Window {
 
 	/**
 	 * Returns {@code true} if this window intersects the given window.
+	 * 窗口是否有交叉，若有交叉，则返回true，否则返回false
 	 */
 	public boolean intersects(TimeWindow other) {
 		return this.start <= other.end && this.end >= other.start;
@@ -120,6 +127,7 @@ public class TimeWindow extends Window {
 
 	/**
 	 * Returns the minimal window covers both this window and the given window.
+	 * 返回最小的覆盖两个窗口的大窗口，取并集
 	 */
 	public TimeWindow cover(TimeWindow other) {
 		return new TimeWindow(Math.min(start, other.start), Math.max(end, other.end));
@@ -204,6 +212,9 @@ public class TimeWindow extends Window {
 
 		List<TimeWindow> sortedWindows = new ArrayList<>(windows);
 
+		/**
+		 * 按照窗口的开始时间进行排序
+		 */
 		Collections.sort(sortedWindows, new Comparator<TimeWindow>() {
 			@Override
 			public int compare(TimeWindow o1, TimeWindow o2) {
@@ -220,7 +231,8 @@ public class TimeWindow extends Window {
 				currentMerge.f0 = candidate;
 				currentMerge.f1 = new HashSet<>();
 				currentMerge.f1.add(candidate);
-			} else if (currentMerge.f0.intersects(candidate)) {
+			} else if (currentMerge.f0.intersects(candidate)) { // 两个窗口有交叉
+				// 返回两个窗口的并集
 				currentMerge.f0 = currentMerge.f0.cover(candidate);
 				currentMerge.f1.add(candidate);
 			} else {

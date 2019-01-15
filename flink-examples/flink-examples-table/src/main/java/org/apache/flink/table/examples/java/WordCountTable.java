@@ -226,6 +226,8 @@ public class WordCountTable {
 
 
 		selectTable.printSchema();
+		System.out.println(Arrays.asList(selectTable.getSchema().getFieldNames()));
+		System.out.println(Arrays.asList(selectTable.getSchema().getFieldTypes()));
 		selectTable.writeToSink(sinktable);
 		//tableEnvironment.registerTableSink("sink", sinktable);
 		//selectTable.insertInto("sink");

@@ -18,12 +18,18 @@
 
 package org.apache.flink.streaming.runtime.operators.windowing;
 
+import org.apache.flink.streaming.api.TimeDomain;
+import org.apache.flink.streaming.api.windowing.assigners.MergingWindowAssigner;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link TimeWindow}.
@@ -60,4 +66,26 @@ public class TimeWindowTest {
 		long size = TimeUnit.DAYS.toMillis(1);
 		Assert.assertEquals(TimeWindow.getWindowStartWithOffset(1470902048450L, offset, size), 1470844800000L);
 	}
+
+	@Test
+	public void testMergeWindows() {
+		// window[2, 6), window[3, 5), window[4, 7), window[8, 10)
+		MergingWindowAssigner.MergeCallback callback = mock(MergingWindowAssigner.MergeCallback.class);
+		TimeWindow timeWindow1 = new TimeWindow(2, 6);
+		TimeWindow timeWindow2 = new TimeWindow(3, 5);
+		TimeWindow timeWindow3 = new TimeWindow(4, 7);
+		TimeWindow timeWindow4 = new TimeWindow(8, 10);
+
+		List<TimeWindow> list = new ArrayList<>();
+		list.add(timeWindow1);
+		list.add(timeWindow2);
+		list.add(timeWindow3);
+		list.add(timeWindow4);
+
+
+		TimeWindow.mergeWindows(list, callback);
+
+	}
+
+
 }

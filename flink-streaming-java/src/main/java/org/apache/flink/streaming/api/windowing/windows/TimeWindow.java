@@ -119,7 +119,7 @@ public class TimeWindow extends Window {
 
 	/**
 	 * Returns {@code true} if this window intersects the given window.
-	 * 窗口是否有交叉，若有交叉，则返回true，否则返回false
+	 * 窗口是否有交叉，若有交集，则返回true，否则返回false
 	 */
 	public boolean intersects(TimeWindow other) {
 		return this.start <= other.end && this.end >= other.start;
@@ -225,17 +225,18 @@ public class TimeWindow extends Window {
 		List<Tuple2<TimeWindow, Set<TimeWindow>>> merged = new ArrayList<>();
 		Tuple2<TimeWindow, Set<TimeWindow>> currentMerge = null;
 
+		//
 		for (TimeWindow candidate: sortedWindows) {
 			if (currentMerge == null) {
 				currentMerge = new Tuple2<>();
 				currentMerge.f0 = candidate;
 				currentMerge.f1 = new HashSet<>();
 				currentMerge.f1.add(candidate);
-			} else if (currentMerge.f0.intersects(candidate)) { // 两个窗口有交叉
-				// 返回两个窗口的并集
+			} else if (currentMerge.f0.intersects(candidate)) { // 两个窗口有交集
+				// 返回两个窗口的并集后再将当前的原始窗口添加至集合中
 				currentMerge.f0 = currentMerge.f0.cover(candidate);
 				currentMerge.f1.add(candidate);
-			} else {
+			} else { // 两个窗口无交集
 				merged.add(currentMerge);
 				currentMerge = new Tuple2<>();
 				currentMerge.f0 = candidate;

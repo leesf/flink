@@ -105,21 +105,36 @@ public class WindowedStream<T, K, W extends Window> {
 	private final KeyedStream<T, K> input;
 
 	/** The window assigner. */
+	/**
+	 * 窗口分配器
+	 */
 	private final WindowAssigner<? super T, W> windowAssigner;
 
 	/** The trigger that is used for window evaluation/emission. */
+	/**
+	 * 触发器
+	 */
 	private Trigger<? super T, ? super W> trigger;
 
 	/** The evictor that is used for evicting elements before window evaluation. */
+	/**
+	 * 驱逐器，在窗口计算之前处理元素
+	 */
 	private Evictor<? super T, ? super W> evictor;
 
 	/** The user-specified allowed lateness. */
+	/**
+	 * 允许的延迟
+	 */
 	private long allowedLateness = 0L;
 
 	/**
 	 * Side output {@code OutputTag} for late data. If no tag is set late data will simply be
 	 * dropped.
  	 */
+	/**
+	 * 用于给延迟到达的元素打标
+	 */
 	private OutputTag<T> lateDataOutputTag;
 
 	@PublicEvolving

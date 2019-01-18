@@ -203,6 +203,7 @@ public class TimeWindow extends Window {
 	// ------------------------------------------------------------------------
 
 	/**
+	 * 该方法会将窗口尽可能的合并，形成更大的窗口，然后调用callback处理
 	 * Merge overlapping {@link TimeWindow}s. For use by merging
 	 * {@link org.apache.flink.streaming.api.windowing.assigners.WindowAssigner WindowAssigners}.
 	 */

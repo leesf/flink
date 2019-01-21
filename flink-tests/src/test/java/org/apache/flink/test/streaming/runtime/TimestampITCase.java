@@ -630,16 +630,17 @@ public class TimestampITCase extends TestLogger {
 		env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
 
 		DataStream<Tuple2<String, Integer>> source1 =
-				env.fromElements(new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 1), new Tuple2<>("b", 2),
+				env.fromElements(
+					new Tuple2<>("a", 1), new Tuple2<>("b", 1),
+					new Tuple2<>("a", 2), new Tuple2<>("b", 2),
+					new Tuple2<>("a", 3), new Tuple2<>("b", 3),
+					new Tuple2<>("a", 4), new Tuple2<>("b", 4),
+					new Tuple2<>("a", 5), new Tuple2<>("b", 5),
+					new Tuple2<>("a", 6), new Tuple2<>("b", 6),
+					new Tuple2<>("a", 7), new Tuple2<>("b", 7),
+					new Tuple2<>("a", 8), new Tuple2<>("b", 8),
+					new Tuple2<>("a", 9), new Tuple2<>("b", 9),
+					new Tuple2<>("a", 10), new Tuple2<>("b", 10),
 		new Tuple2<>("a", 1), new Tuple2<>("b", 2));
 
 		source1

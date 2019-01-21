@@ -63,9 +63,13 @@ public class SlidingProcessingTimeWindows extends WindowAssigner<Object, TimeWin
 
 	@Override
 	public Collection<TimeWindow> assignWindows(Object element, long timestamp, WindowAssignerContext context) {
+		// 获取当前的处理时间
 		timestamp = context.getCurrentProcessingTime();
+		// 窗口大小除以窗口滑动长度
 		List<TimeWindow> windows = new ArrayList<>((int) (size / slide));
+		// 获取窗口开始时间
 		long lastStart = TimeWindow.getWindowStartWithOffset(timestamp, offset, slide);
+		// 计算该元素属于的所有窗口
 		for (long start = lastStart;
 			start > timestamp - size;
 			start -= slide) {

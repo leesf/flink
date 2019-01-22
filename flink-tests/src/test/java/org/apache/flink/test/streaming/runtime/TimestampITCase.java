@@ -37,6 +37,7 @@ import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.AssignerWithPunctuatedWatermarks;
 import org.apache.flink.streaming.api.functions.co.CoMapFunction;
 import org.apache.flink.streaming.api.functions.sink.DiscardingSink;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
@@ -651,8 +652,13 @@ public class TimestampITCase extends TestLogger {
 					public Tuple2<String, Integer> reduce(Tuple2<String, Integer> value1, Tuple2<String, Integer> value2)  {
 						return value1;
 					}
-				})
-				.print();
+				}).addSink(new SinkFunction<Tuple2<String, Integer>>() {
+			@Override public void invoke(Tuple2<String, Integer> value,
+				Context context) throws Exception {
+				System.out.println(value);
+			}
+		});
+
 
 		try {
 			env.execute();

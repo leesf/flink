@@ -33,6 +33,9 @@ public class ProcessingTimeTrigger extends Trigger<Object, TimeWindow> {
 
 	@Override
 	public TriggerResult onElement(Object element, long timestamp, TimeWindow window, TriggerContext ctx) {
+		/**
+		 * 注册timer
+		 */
 		ctx.registerProcessingTimeTimer(window.maxTimestamp());
 		return TriggerResult.CONTINUE;
 	}
@@ -63,6 +66,9 @@ public class ProcessingTimeTrigger extends Trigger<Object, TimeWindow> {
 		// only register a timer if the time is not yet past the end of the merged window
 		// this is in line with the logic in onElement(). If the time is past the end of
 		// the window onElement() will fire and setting a timer here would fire the window twice.
+		/**
+		 * 当前的处理时间小于窗口的结束时间，则注册timer，窗口可能会被触发多次
+		 */
 		long windowMaxTimestamp = window.maxTimestamp();
 		if (windowMaxTimestamp > ctx.getCurrentProcessingTime()) {
 			ctx.registerProcessingTimeTimer(windowMaxTimestamp);

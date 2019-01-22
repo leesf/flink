@@ -193,14 +193,20 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 
 	@Override
 	public void registerProcessingTimeTimer(N namespace, long time) {
+		// 从队列中获取一个Timer
 		InternalTimer<K, N> oldHead = processingTimeTimersQueue.peek();
+		// 将Timer存入队列
 		if (processingTimeTimersQueue.add(new TimerHeapInternalTimer<>(time, (K) keyContext.getCurrentKey(), namespace))) {
+			// 之前的Timer不为空则获取到其触发时间
 			long nextTriggerTime = oldHead != null ? oldHead.getTimestamp() : Long.MAX_VALUE;
 			// check if we need to re-schedule our timer to earlier
+			// 注册的窗口时间小于队列最小的Timer的触发时间
 			if (time < nextTriggerTime) {
+				// 上一次的Timer不为空，取消后再注册
 				if (nextTimer != null) {
 					nextTimer.cancel(false);
 				}
+				// 注册
 				nextTimer = processingTimeService.registerTimer(time, this);
 			}
 		}

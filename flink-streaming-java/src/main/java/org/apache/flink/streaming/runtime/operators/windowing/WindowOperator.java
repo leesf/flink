@@ -785,9 +785,11 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 	 * the {@code Context}
 	 */
 	public class Context implements Trigger.OnMergeContext {
+		// 键值
 		protected K key;
+		// 窗口
 		protected W window;
-
+		// 合并的窗口
 		protected Collection<W> mergedWindows;
 
 		public Context(K key, W window) {
@@ -800,6 +802,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 			return WindowOperator.this.getMetricGroup();
 		}
 
+		@Override
 		public long getCurrentWatermark() {
 			return internalTimerService.currentWatermark();
 		}
@@ -836,6 +839,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 		}
 
 		@SuppressWarnings("unchecked")
+		@Override
 		public <S extends State> S getPartitionedState(StateDescriptor<S, ?> stateDescriptor) {
 			try {
 				return WindowOperator.this.getPartitionedState(window, windowSerializer, stateDescriptor);

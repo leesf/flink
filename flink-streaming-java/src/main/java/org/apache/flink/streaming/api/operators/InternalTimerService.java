@@ -40,11 +40,15 @@ public interface InternalTimerService<N> {
 	/**
 	 * Registers a timer to be fired when processing time passes the given time. The namespace
 	 * you pass here will be provided when the timer fires.
+	 *
+	 * 注册定时器
 	 */
 	void registerProcessingTimeTimer(N namespace, long time);
 
 	/**
 	 * Deletes the timer for the given key and namespace.
+	 *
+	 * 删除定时器
 	 */
 	void deleteProcessingTimeTimer(N namespace, long time);
 

@@ -113,6 +113,7 @@ public class SystemProcessingTimeService extends ProcessingTimeService {
 		// delay the firing of the timer by 1 ms to align the semantics with watermark. A watermark
 		// T says we won't see elements in the future with a timestamp smaller or equal to T.
 		// With processing time, we therefore need to delay firing the timer by one ms.
+		// 延迟调度时间
 		long delay = Math.max(timestamp - getCurrentProcessingTime(), 0) + 1;
 
 		// we directly try to register the timer and only react to the status on exception
@@ -254,6 +255,9 @@ public class SystemProcessingTimeService extends ProcessingTimeService {
 
 	/**
 	 * Internal task that is invoked by the timer service and triggers the target.
+	 *
+	 * 定时器触发的任务
+	 *
 	 */
 	private static final class TriggerTask implements Runnable {
 

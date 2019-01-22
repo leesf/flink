@@ -58,7 +58,7 @@ public abstract class ProcessingTimeService {
 
 	/**
 	 * Registers a task to be executed repeatedly at a fixed rate.
-	 *
+	 * 定时调用
 	 * @param callback to be executed after the initial delay and then after each period
 	 * @param initialDelay initial delay to start executing callback
 	 * @param period after the initial delay after which the callback is executed

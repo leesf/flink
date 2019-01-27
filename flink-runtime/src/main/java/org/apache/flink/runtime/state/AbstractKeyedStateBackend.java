@@ -62,6 +62,9 @@ public abstract class AbstractKeyedStateBackend<K> implements
 	private int currentKeyGroup;
 
 	/** So that we can give out state when the user uses the same key. */
+	/**
+	 * 用户
+	 */
 	private final HashMap<String, InternalKvState<K, ?, ?>> keyValueStatesByName;
 
 	/** For caching the last accessed partitioned state. */

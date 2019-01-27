@@ -109,11 +109,13 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 	/**
 	 * Min capacity (other than zero) for a {@link CopyOnWriteStateTable}. Must be a power of two
 	 * greater than 1 (and less than 1 << 30).
+	 * 最小容量
 	 */
 	private static final int MINIMUM_CAPACITY = 4;
 
 	/**
 	 * Max capacity for a {@link CopyOnWriteStateTable}. Must be a power of two >= MINIMUM_CAPACITY.
+	 * 最大容量
 	 */
 	private static final int MAXIMUM_CAPACITY = 1 << 30;
 
@@ -138,12 +140,14 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 
 	/**
 	 * Maintains an ordered set of version ids that are still in use by unreleased snapshots.
+	 * 快照中存在的版本号
 	 */
 	private final TreeSet<Integer> snapshotVersions;
 
 	/**
 	 * This is the primary entry array (hash directory) of the state table. If no incremental rehash is ongoing, this
 	 * is the only used table.
+	 * 主条目
 	 **/
 	private StateTableEntry<K, N, S>[] primaryTable;
 
@@ -189,6 +193,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 	 * The value of this field is generally .75 * capacity, except when
 	 * the capacity is zero, as described in the EMPTY_TABLE declaration
 	 * above.
+	 * 进行重新哈希的阈值
 	 */
 	private int threshold;
 
@@ -641,6 +646,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 	private StateTableEntry<K, N, S>[] makeTable(int newCapacity) {
 
 		if (newCapacity < MAXIMUM_CAPACITY) {
+			// 初始化为3/4
 			threshold = (newCapacity >> 1) + (newCapacity >> 2); // 3/4 capacity
 		} else {
 			if (size() > MAX_ARRAY_SIZE) {
@@ -927,6 +933,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 		/**
 		 * Link to another {@link StateTableEntry}. This is used to resolve collisions in the
 		 * {@link CopyOnWriteStateTable} through chaining.
+		 * 下一个，用于解决冲突
 		 */
 		@Nullable
 		StateTableEntry<K, N, S> next;

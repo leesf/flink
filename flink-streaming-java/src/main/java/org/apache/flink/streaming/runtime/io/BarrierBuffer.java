@@ -49,6 +49,10 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * <p>To avoid back-pressuring the input streams (which may cause distributed deadlocks), the
  * BarrierBuffer continues receiving buffers from the blocked channels and stores them internally until
  * the blocks are released.
+ *
+ * 对输入端进行对齐（align），阻塞已接收到屏障的输入端直到从所有的输入端接收到该检查点的屏障，
+ * 为了避免产生反压（back pressure），通过缓冲区来缓冲已到来且尚未被处理的元素，直到阻塞被解除；
+ *
  */
 @Internal
 public class BarrierBuffer implements CheckpointBarrierHandler {
@@ -70,6 +74,7 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 	/**
 	 * The pending blocked buffer/event sequences. Must be consumed before requesting further data
 	 * from the input gate.
+	 * 在流对齐时缓存的数据
 	 */
 	private final ArrayDeque<BufferOrEventSequence> queuedBuffered;
 
@@ -162,6 +167,7 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 			// process buffered BufferOrEvents before grabbing new ones
 			Optional<BufferOrEvent> next;
 			if (currentBuffered == null) {
+				// 获取事件
 				next = inputGate.getNextBufferOrEvent();
 			}
 			else {

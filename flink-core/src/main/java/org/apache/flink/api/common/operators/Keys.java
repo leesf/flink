@@ -42,6 +42,10 @@ public abstract class Keys<T> {
 
 	public abstract int getNumberOfKeyFields();
 
+	/**
+	 * 计算key的位置
+	 * @return
+	 */
 	public abstract int[] computeLogicalKeyPositions();
 
 	public abstract TypeInformation<?>[] getKeyFieldTypes();
@@ -199,7 +203,9 @@ public abstract class Keys<T> {
 				+ "\\" + SELECT_ALL_CHAR_SCALA +")$");
 
 		// Flattened fields representing keys fields
+		// key的描述符
 		private List<FlatFieldDescriptor> keyFields;
+		// key类型
 		private TypeInformation<?>[] originalKeyTypes;
 
 		/**

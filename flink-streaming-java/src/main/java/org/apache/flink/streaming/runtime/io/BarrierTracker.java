@@ -45,6 +45,9 @@ import java.util.Optional;
  * guarantees. It can, however, be used to gain "at least once" processing guarantees.
  *
  * <p>NOTE: This implementation strictly assumes that newer checkpoints have higher checkpoint IDs.
+ *
+ *
+ * 仅对屏障进行跟踪，一旦某个任务接收到某个检查点的所有屏障，则触发回调以执行检查点；
  */
 @Internal
 public class BarrierTracker implements CheckpointBarrierHandler {
@@ -140,6 +143,12 @@ public class BarrierTracker implements CheckpointBarrierHandler {
 		return 0L;
 	}
 
+	/**
+	 * 处理checkpoint barrier.
+	 * @param receivedBarrier
+	 * @param channelIndex
+	 * @throws Exception
+	 */
 	private void processBarrier(CheckpointBarrier receivedBarrier, int channelIndex) throws Exception {
 		final long barrierId = receivedBarrier.getId();
 

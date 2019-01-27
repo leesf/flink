@@ -147,6 +147,9 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 	// ------------------------------------------------------------------------
 
 	/** The state in which the window contents is stored. Each window is a namespace */
+	/**
+	 * 用于存储窗口状态，每个窗口为一个命名空间
+	 */
 	private transient InternalAppendingState<K, W, IN, ACC, ACC> windowState;
 
 	/**
@@ -495,6 +498,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 		TriggerResult triggerResult = triggerContext.onProcessingTime(timer.getTimestamp());
 
 		if (triggerResult.isFire()) {
+			// 获取窗口的状态
 			ACC contents = windowState.get();
 			if (contents != null) {
 				emitWindowContents(triggerContext.window, contents);

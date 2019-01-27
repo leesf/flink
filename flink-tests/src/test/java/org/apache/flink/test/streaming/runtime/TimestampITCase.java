@@ -21,14 +21,21 @@ package org.apache.flink.test.streaming.runtime;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
+import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.functions.StoppableFunction;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.core.testutils.MultiShotLatch;
+import org.apache.flink.optimizer.plantranslate.JobGraphGenerator;
 import org.apache.flink.runtime.client.JobStatusMessage;
+import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -40,6 +47,7 @@ import org.apache.flink.streaming.api.functions.sink.DiscardingSink;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
+import org.apache.flink.streaming.api.graph.StreamGraph;
 import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
@@ -49,6 +57,7 @@ import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTime
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
+import org.apache.flink.util.Collector;
 import org.apache.flink.util.TestLogger;
 
 import org.junit.Assert;
@@ -622,6 +631,64 @@ public class TimestampITCase extends TestLogger {
 		Assert.assertTrue(CustomOperator.finalWatermarks[0].size() == 0);
 	}
 
+
+	static class CountWindowAverage extends
+		RichFlatMapFunction<Tuple2<Long, Long>, Tuple2<Long, Long>> {
+
+		/**
+		 * ValueState状态句柄. 第一个值为count，第二个值为sum。
+		 */
+		private transient ValueState<Tuple2<Long, Long>> sum;
+
+		@Override
+		public void flatMap(Tuple2<Long, Long> input, Collector<Tuple2<Long, Long>> out) throws Exception {
+			// 获取当前状态值
+			Tuple2<Long, Long> currentSum = sum.value();
+
+			// 更新
+			currentSum.f0 += 1;
+			currentSum.f1 += input.f1;
+
+			Tuple2<Long, Long> currentSum1 = sum.value();
+
+			// 更新状态值
+			sum.update(currentSum);
+
+			// 如果count >=2 清空状态值，重新计算
+			/*if (currentSum.f0 >= 2) {
+				out.collect(new Tuple2<>(input.f0, currentSum.f1 / currentSum.f0));
+				sum.clear();
+			}*/
+		}
+
+		@Override
+		public void open(Configuration config) {
+			ValueStateDescriptor<Tuple2<Long, Long>> descriptor =
+				new ValueStateDescriptor<>(
+					"average", // 状态名称
+					TypeInformation.of(new TypeHint<Tuple2<Long, Long>>() {}), // 状态类型
+					Tuple2.of(0L, 0L)); // 状态默认值
+			sum = getRuntimeContext().getState(descriptor);
+		}
+	}
+
+
+	@Test
+	public void testState() {
+
+		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+		// ...
+		env.fromElements(Tuple2.of(1L, 3L), Tuple2.of(1L, 5L), Tuple2.of(1L, 7L), Tuple2.of(1L, 4L), Tuple2.of(1L, 2L))
+			.keyBy(0)
+			.flatMap(new CountWindowAverage()).setParallelism(1)
+			.print().setParallelism(1);
+
+		try {
+			env.execute();
+		} catch (Exception e) {}
+	}
+
 	@Test
 	public void testErrorOnEventTimeOverProcessingTime() {
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -630,19 +697,42 @@ public class TimestampITCase extends TestLogger {
 		env.getConfig().disableSysoutLogging();
 		env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
 
+		List<Tuple2<String, Integer>> list = new ArrayList<>();
+		for (int i = 0; i < 100000; i++) {
+			list.add(new Tuple2<>("a", i % 10));
+		}
+
 		DataStream<Tuple2<String, Integer>> source1 =
-				env.fromElements(
-					new Tuple2<>("a", 1), new Tuple2<>("b", 1),
-					new Tuple2<>("a", 2), new Tuple2<>("b", 2),
-					new Tuple2<>("a", 3), new Tuple2<>("b", 3),
-					new Tuple2<>("a", 4), new Tuple2<>("b", 4),
-					new Tuple2<>("a", 5), new Tuple2<>("b", 5),
-					new Tuple2<>("a", 6), new Tuple2<>("b", 6),
-					new Tuple2<>("a", 7), new Tuple2<>("b", 7),
-					new Tuple2<>("a", 8), new Tuple2<>("b", 8),
-					new Tuple2<>("a", 9), new Tuple2<>("b", 9),
-					new Tuple2<>("a", 10), new Tuple2<>("b", 10),
-		new Tuple2<>("a", 1), new Tuple2<>("b", 2));
+				/*env.fromElements(
+						new Tuple2<>("a", 1), new Tuple2<>("b", 1),
+						new Tuple2<>("a", 2), new Tuple2<>("b", 2),
+						new Tuple2<>("a", 3), new Tuple2<>("b", 3),
+						new Tuple2<>("a", 4), new Tuple2<>("b", 4),
+						new Tuple2<>("a", 5), new Tuple2<>("b", 5),
+						new Tuple2<>("a", 6), new Tuple2<>("b", 6),
+						new Tuple2<>("a", 7), new Tuple2<>("b", 7),
+						new Tuple2<>("a", 8), new Tuple2<>("b", 8),
+						new Tuple2<>("a", 9), new Tuple2<>("b", 9),
+						new Tuple2<>("a", 10), new Tuple2<>("b", 10),
+						new Tuple2<>("a", 1), new Tuple2<>("b", 2));*/
+				env.fromCollection(list);
+
+		/*source1.windowAll(TumblingProcessingTimeWindows.of(Time.milliseconds(1))).reduce(new ReduceFunction<Tuple2<String, Integer>>() {
+			@Override
+			public Tuple2<String, Integer> reduce(Tuple2<String, Integer> value1, Tuple2<String, Integer> value2)  {
+				return new Tuple2<>(value1.f0, value1.f1 + 100);
+			}
+		}).addSink(new SinkFunction<Tuple2<String, Integer>>() {
+			@Override public void invoke(Tuple2<String, Integer> value,
+				Context context) throws Exception {
+				System.out.println(value);
+			}
+		});
+
+		StreamGraph streamGraph = env.getStreamGraph();
+		streamGraph.setJobName("test job");
+		JobGraph jobGraph = streamGraph.getJobGraph();*/
+
 
 		source1
 				.keyBy(0)
@@ -650,15 +740,18 @@ public class TimestampITCase extends TestLogger {
 				.reduce(new ReduceFunction<Tuple2<String, Integer>>() {
 					@Override
 					public Tuple2<String, Integer> reduce(Tuple2<String, Integer> value1, Tuple2<String, Integer> value2)  {
-						return value1;
+						return new Tuple2<>(value1.f0, value1.f1 + 100);
 					}
 				}).addSink(new SinkFunction<Tuple2<String, Integer>>() {
 			@Override public void invoke(Tuple2<String, Integer> value,
 				Context context) throws Exception {
+
 				System.out.println(value);
 			}
 		});
-
+		StreamGraph streamGraph = env.getStreamGraph();
+		streamGraph.setJobName("test job");
+		JobGraph jobGraph = streamGraph.getJobGraph();
 
 		try {
 			env.execute();

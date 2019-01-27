@@ -117,6 +117,7 @@ public class HeapKeyedStateBackend<K> extends AbstractKeyedStateBackend<K> {
 
 	/**
 	 * Map of registered Key/Value states.
+	 * 描述与StateTable的映射
 	 */
 	private final Map<String, StateTable<K, ?, ?>> registeredKVStates;
 

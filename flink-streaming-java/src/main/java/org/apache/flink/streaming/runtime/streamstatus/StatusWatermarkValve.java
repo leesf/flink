@@ -99,15 +99,18 @@ public class StatusWatermarkValve {
 			long watermarkMillis = watermark.getTimestamp();
 
 			// if the input watermark's value is less than the last received watermark for its input channel, ignore it also.
+			// 如果当前输入的watermark小于该channel的watermark，直接忽略；只处理大于的情况
 			if (watermarkMillis > channelStatuses[channelIndex].watermark) {
 				channelStatuses[channelIndex].watermark = watermarkMillis;
 
 				// previously unaligned input channels are now aligned if its watermark has caught up
+				// 标识当前channel的watermark已经检查过
 				if (!channelStatuses[channelIndex].isWatermarkAligned && watermarkMillis >= lastOutputWatermark) {
 					channelStatuses[channelIndex].isWatermarkAligned = true;
 				}
 
 				// now, attempt to find a new min watermark across all aligned channels
+				// 取所有channel的watermark最小值并调用handleWatermark方法
 				findAndOutputNewMinWatermarkAcrossAlignedChannels();
 			}
 		}

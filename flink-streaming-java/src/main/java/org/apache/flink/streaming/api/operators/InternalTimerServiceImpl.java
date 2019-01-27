@@ -45,17 +45,22 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  */
 public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, ProcessingTimeCallback {
 
+	/**
+	 * 目前使用SystemProcessingTimeService，包含了窗口到期回调线程池
+	 */
 	private final ProcessingTimeService processingTimeService;
 
 	private final KeyContext keyContext;
 
 	/**
 	 * Processing time timers that are currently in-flight.
+	 * Processing time相关的Timer
 	 */
 	private final KeyGroupedInternalPriorityQueue<TimerHeapInternalTimer<K, N>> processingTimeTimersQueue;
 
 	/**
 	 * Event time timers that are currently in-flight.
+	 * Event time相关的Timer
 	 */
 	private final KeyGroupedInternalPriorityQueue<TimerHeapInternalTimer<K, N>> eventTimeTimersQueue;
 
@@ -69,12 +74,14 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 	/**
 	 * The local event time, as denoted by the last received
 	 * {@link org.apache.flink.streaming.api.watermark.Watermark Watermark}.
+	 * 当前Task的watermark
 	 */
 	private long currentWatermark = Long.MIN_VALUE;
 
 	/**
 	 * The one and only Future (if any) registered to execute the
 	 * next {@link Triggerable} action, when its (processing) time arrives.
+	 * 最接近的未被触发的窗口的Scheduled Future
 	 * */
 	private ScheduledFuture<?> nextTimer;
 
@@ -84,6 +91,9 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 
 	private TypeSerializer<N> namespaceSerializer;
 
+	/**
+	 * 窗口的回调函数，如果是WindowOperator，则会根据时间类型，回调WindowOperator.onEventTime或onProcessingTime方法
+	 */
 	private Triggerable<K, N> triggerTarget;
 
 	private volatile boolean isInitialized;
@@ -200,13 +210,13 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 			// 之前的Timer不为空则获取到其触发时间
 			long nextTriggerTime = oldHead != null ? oldHead.getTimestamp() : Long.MAX_VALUE;
 			// check if we need to re-schedule our timer to earlier
-			// 注册的窗口时间小于队列最小的Timer的触发时间
+			// 如果新添加的timer的窗口触发时间早于nextTimer，则取消nextTimer的触发，
 			if (time < nextTriggerTime) {
-				// 上一次的Timer不为空，取消后再注册
+
 				if (nextTimer != null) {
 					nextTimer.cancel(false);
 				}
-				// 注册
+				// 注册Timer
 				nextTimer = processingTimeService.registerTimer(time, this);
 			}
 		}
@@ -234,7 +244,7 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 		nextTimer = null;
 
 		InternalTimer<K, N> timer;
-
+		// Timer所对应的窗口边界<=当前窗口边界时间
 		while ((timer = processingTimeTimersQueue.peek()) != null && timer.getTimestamp() <= time) {
 			processingTimeTimersQueue.poll();
 			keyContext.setCurrentKey(timer.getKey());

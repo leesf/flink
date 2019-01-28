@@ -165,15 +165,21 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 	public BufferOrEvent getNextNonBlocked() throws Exception {
 		while (true) {
 			// process buffered BufferOrEvents before grabbing new ones
+			//如果当前的缓冲区不存在，则从输入通道中获得记录，屏障缓冲区维护着缓冲区的队列同时维护着当前缓冲区
+			//所以当前缓冲区如果不存在了，那么代表整个缓冲区队列中没有缓冲区
+			//由此可见如果缓冲区中有数据，那么缓冲区被优先处理
 			Optional<BufferOrEvent> next;
 			if (currentBuffered == null) {
-				// 获取事件
+				// 获取buffer或者barrier事件
 				next = inputGate.getNextBufferOrEvent();
 			}
 			else {
 				next = Optional.ofNullable(currentBuffered.getNext());
+				//表示当前缓冲区中已经没有更多地数据了
 				if (!next.isPresent()) {
+					//清空当前缓冲区，从缓冲区队列中获取新的缓冲区并打开它，同时让当前缓存区引用指向它
 					completeBufferedSequence();
+					//递归调用，获取新的缓冲区中的数据
 					return getNextNonBlocked();
 				}
 			}
@@ -190,17 +196,22 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 					return null;
 				}
 			}
-
+			//获取到一条记录（它可能是一条数据记录，也可能是一个屏障事件）
 			BufferOrEvent bufferOrEvent = next.get();
+			//如果获取到的记录所在的信道已经处于阻塞状态（已从该信道上接收到屏障，但还没有从所有信道上接收到屏障），
+			//则该记录会被加入缓冲区
 			if (isBlocked(bufferOrEvent.getChannelIndex())) {
 				// if the channel is blocked we, we just store the BufferOrEvent
 				bufferBlocker.add(bufferOrEvent);
 				checkSizeLimit();
 			}
+			//如果它是一条数据记录，而不是一个屏障事件，则直接返回
 			else if (bufferOrEvent.isBuffer()) {
 				return bufferOrEvent;
 			}
+			//如果它是一个屏障事件，且来自非阻塞的通道
 			else if (bufferOrEvent.getEvent().getClass() == CheckpointBarrier.class) {
+				//并且输入数据流还未处于结束状态，则处理该屏障
 				if (!endOfStream) {
 					// process barriers only if there is a chance of the checkpoint completing
 					processBarrier((CheckpointBarrier) bufferOrEvent.getEvent(), bufferOrEvent.getChannelIndex());
@@ -210,6 +221,7 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 				processCancellationBarrier((CancelCheckpointMarker) bufferOrEvent.getEvent());
 			}
 			else {
+				//如果它是一个表示当前已到达分区末尾的事件
 				if (bufferOrEvent.getEvent().getClass() == EndOfPartitionEvent.class) {
 					processEndOfPartition();
 				}
@@ -285,6 +297,7 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 
 		// check if we have all barriers - since canceled checkpoints always have zero barriers
 		// this can only happen on a non canceled checkpoint
+		// 对齐完成
 		if (numBarriersReceived + numClosedChannels == totalNumberOfInputChannels) {
 			// actually trigger checkpoint
 			if (LOG.isDebugEnabled()) {

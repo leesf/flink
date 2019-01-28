@@ -111,6 +111,7 @@ public class ZooKeeperCheckpointIDCounter implements CheckpointIDCounter {
 	@Override
 	public long getAndIncrement() throws Exception {
 		while (true) {
+			//如果检测到连接状态为暂停或者丢失，则抛出异常
 			ConnectionState connState = connStateListener.getLastState();
 
 			if (connState != null) {

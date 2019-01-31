@@ -272,6 +272,9 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 	@Override
 	public S get(K key, N namespace) {
 
+		/**
+		 * 根据Key和Namespace计算出哈希值，进而计算其位置，一个位置可对应多个Entry,由于哈希冲突导致
+		 */
 		final int hash = computeHashForOperationAndDoIncrementalRehash(key, namespace);
 		final int requiredVersion = highestRequiredSnapshotVersion;
 		final StateTableEntry<K, N, S>[] tab = selectActiveTable(hash);
@@ -281,7 +284,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 			final K eKey = e.key;
 			final N eNamespace = e.namespace;
 			if ((e.hash == hash && key.equals(eKey) && namespace.equals(eNamespace))) {
-
+				// 命名空间和key及namespace都相同
 				// copy-on-write check for state
 				if (e.stateVersion < requiredVersion) {
 					// copy-on-write check for entry
@@ -820,7 +823,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 			StateTableEntry<K, N, S> untilEntry) {
 
 		final int required = highestRequiredSnapshotVersion;
-
+		// 先保存当前的Entry的引用
 		StateTableEntry<K, N, S> current = tab[tableIdx];
 		StateTableEntry<K, N, S> copy;
 

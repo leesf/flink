@@ -135,6 +135,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 	 * {@link OutputTag} to use for late arriving events. Elements for which
 	 * {@code window.maxTimestamp + allowedLateness} is smaller than the current watermark will
 	 * be emitted to this.
+	 * 记录迟到的元素，窗口结束时间+等待时间<watermark
 	 */
 	protected final OutputTag<IN> lateDataOutputTag;
 

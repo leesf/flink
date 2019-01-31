@@ -63,7 +63,7 @@ public abstract class AbstractKeyedStateBackend<K> implements
 
 	/** So that we can give out state when the user uses the same key. */
 	/**
-	 * 用户
+	 * 用于存储名字与state的映射
 	 */
 	private final HashMap<String, InternalKvState<K, ?, ?>> keyValueStatesByName;
 

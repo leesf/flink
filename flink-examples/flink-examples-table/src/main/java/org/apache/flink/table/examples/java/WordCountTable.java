@@ -25,6 +25,8 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.optimizer.plantranslate.JobGraphGenerator;
+import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
@@ -32,6 +34,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.api.graph.StreamGraph;
+import org.apache.flink.streaming.api.graph.StreamingJobGraphGenerator;
 import org.apache.flink.streaming.api.scala.DataStream;
 import org.apache.flink.table.api.GroupedTable;
 import org.apache.flink.table.api.Table;
@@ -209,7 +213,8 @@ public class WordCountTable {
 		tableEnvironment.registerTable("source", table);
 		Table table1 = tableEnvironment.scan("source");
 		//Table selectTable1 = table1.select("name, address, birth, age").groupBy("name, address, birth").select("name, address, birth, sum(age)");
-		Table selectTable = table1/*.groupBy("name, address, birth")*/.select("name, address, birth, age, a");
+		Table selectTable = table1/*.groupBy("name, address, birth")*/.window(Tumble.over("1.minute").on("age").as("aa")).table().select("name, address, birth, age, a")
+			;
 
 		String[] fieldNames = new String[] {"name", "address", "birth", "age"};
 		List<TypeInformation<?>> fieldTypes = new ArrayList<>();
@@ -232,6 +237,9 @@ public class WordCountTable {
 		//tableEnvironment.registerTableSink("sink", sinktable);
 		//selectTable.insertInto("sink");
 		//tableEnvironment.toRetractStream(tableEnvironment.scan("sink"), WC.class).print();
+
+		StreamGraph streamGraph = streamExecutionEnvironment.getStreamGraph();
+		JobGraph jobGraph = StreamingJobGraphGenerator.createJobGraph(streamGraph);
 
 		streamExecutionEnvironment.execute();
 

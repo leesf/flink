@@ -510,7 +510,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 	 * Helper method that is the basis for operations that remove mappings.
 	 */
 	private StateTableEntry<K, N, S> removeEntry(K key, N namespace) {
-
+		// 根据key和namespace计算出hash值
 		final int hash = computeHashForOperationAndDoIncrementalRehash(key, namespace);
 		final StateTableEntry<K, N, S>[] tab = selectActiveTable(hash);
 		int index = hash & (tab.length - 1);

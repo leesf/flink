@@ -272,6 +272,9 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 	@Override
 	public S get(K key, N namespace) {
 
+		/**
+		 * 根据Key和Namespace计算出哈希值，进而计算其位置，一个位置可对应多个Entry,由于哈希冲突导致
+		 */
 		final int hash = computeHashForOperationAndDoIncrementalRehash(key, namespace);
 		final int requiredVersion = highestRequiredSnapshotVersion;
 		final StateTableEntry<K, N, S>[] tab = selectActiveTable(hash);
@@ -281,7 +284,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 			final K eKey = e.key;
 			final N eNamespace = e.namespace;
 			if ((e.hash == hash && key.equals(eKey) && namespace.equals(eNamespace))) {
-
+				// hash、key及namespace都相同
 				// copy-on-write check for state
 				if (e.stateVersion < requiredVersion) {
 					// copy-on-write check for entry
@@ -483,6 +486,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 		int index = hash & (tab.length - 1);
 
 		for (StateTableEntry<K, N, S> e = tab[index]; e != null; e = e.next) {
+			// 产生了冲突
 			if (e.hash == hash && key.equals(e.key) && namespace.equals(e.namespace)) {
 
 				// copy-on-write check for entry
@@ -506,7 +510,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 	 * Helper method that is the basis for operations that remove mappings.
 	 */
 	private StateTableEntry<K, N, S> removeEntry(K key, N namespace) {
-
+		// 根据key和namespace计算出hash值
 		final int hash = computeHashForOperationAndDoIncrementalRehash(key, namespace);
 		final StateTableEntry<K, N, S>[] tab = selectActiveTable(hash);
 		int index = hash & (tab.length - 1);
@@ -647,7 +651,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 
 		if (newCapacity < MAXIMUM_CAPACITY) {
 			// 初始化为3/4
-			threshold = (newCapacity >> 1) + (newCapacity >> 2); // 3/4 capacity
+			threshold = (newCapacity >> 1) + (newCapacity >> 2);
 		} else {
 			if (size() > MAX_ARRAY_SIZE) {
 
@@ -820,11 +824,12 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 			StateTableEntry<K, N, S> untilEntry) {
 
 		final int required = highestRequiredSnapshotVersion;
-
+		// 先保存当前的Entry的引用
 		StateTableEntry<K, N, S> current = tab[tableIdx];
 		StateTableEntry<K, N, S> copy;
 
 		if (current.entryVersion < required) {
+			// 版本号小于最大版本号则重新生成一个Entry
 			copy = new StateTableEntry<>(current, stateTableVersion);
 			tab[tableIdx] = copy;
 		} else {
@@ -837,7 +842,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 
 			//advance current
 			current = current.next;
-
+			// 重新形成单链表
 			if (current.entryVersion < required) {
 				// copy and advance the current's copy
 				copy.next = new StateTableEntry<>(current, stateTableVersion);
@@ -848,6 +853,7 @@ public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> implemen
 			}
 		}
 
+		// 返回最后一个Entry
 		return copy;
 	}
 

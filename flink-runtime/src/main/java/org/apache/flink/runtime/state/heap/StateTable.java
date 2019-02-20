@@ -42,6 +42,7 @@ public abstract class StateTable<K, N, S> implements StateSnapshotRestore {
 
 	/**
 	 * The key context view on the backend. This provides information, such as the currently active key.
+	 * 后端存储key的类型
 	 */
 	protected final InternalKeyContext<K> keyContext;
 

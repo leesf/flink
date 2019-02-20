@@ -145,8 +145,11 @@ public abstract class AbstractPagedOutputView implements DataOutputView {
 	 * implementation and obtain the next segment to write to. Writing will continue inside the new segment
 	 * after the header.
 	 *
+	 * 使用下一个segment，并且设置positionInSegment为headerLength
+	 *
 	 * @throws IOException Thrown, if the current segment could not be processed or a new segment could not
 	 *                     be obtained.
+	 *
 	 */
 	protected void advance() throws IOException {
 		this.currentSegment = nextSegment(this.currentSegment, this.positionInSegment);
@@ -192,28 +195,38 @@ public abstract class AbstractPagedOutputView implements DataOutputView {
 
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
+		// 首先计算剩余容量
 		int remaining = this.segmentSize - this.positionInSegment;
 		if (remaining >= len) {
+			// 剩余容量大于写入的长度，则直接写入
 			this.currentSegment.put(this.positionInSegment, b, off, len);
 			this.positionInSegment += len;
 		}
 		else {
+			// 剩余容量不大于写入的长度
 			if (remaining == 0) {
+				// 若剩余容量为0，则先申请一个segment
 				advance();
+				// 计算新的segment剩余的容量
 				remaining = this.segmentSize - this.positionInSegment;
 			}
 			while (true) {
+				// 计算能够写入的长度
 				int toPut = Math.min(remaining, len);
 				this.currentSegment.put(this.positionInSegment, b, off, toPut);
+				// 计算下一次偏移和需要写入的长度
 				off += toPut;
 				len -= toPut;
 
 				if (len > 0) {
+					// 写满了segment,重新申请segment
 					this.positionInSegment = this.segmentSize;
 					advance();
+					// 计算新的segment剩余的容量
 					remaining = this.segmentSize - this.positionInSegment;
 				}
 				else {
+					// 写完数据
 					this.positionInSegment += toPut;
 					break;
 				}
@@ -298,6 +311,7 @@ public abstract class AbstractPagedOutputView implements DataOutputView {
 			writeLong(v);
 		}
 		else {
+			// 转化为byte写入
 			writeByte((int) (v >> 56));
 			writeByte((int) (v >> 48));
 			writeByte((int) (v >> 40));
@@ -409,6 +423,7 @@ public abstract class AbstractPagedOutputView implements DataOutputView {
 		while (numBytes > 0) {
 			final int remaining = this.segmentSize - this.positionInSegment;
 			if (numBytes <= remaining) {
+				// 将source的字节写入segment
 				this.currentSegment.put(source, this.positionInSegment, numBytes);
 				this.positionInSegment += numBytes;
 				return;

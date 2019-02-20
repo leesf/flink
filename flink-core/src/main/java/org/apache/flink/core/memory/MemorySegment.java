@@ -129,6 +129,7 @@ public abstract class MemorySegment {
 	/**
 	 * The address to the data, relative to the heap memory byte array. If the heap memory byte
 	 * array is <tt>null</tt>, this becomes an absolute memory address outside the heap.
+	 * 如果heapMemory为空，则address表示堆外绝对地址
 	 */
 	protected long address;
 

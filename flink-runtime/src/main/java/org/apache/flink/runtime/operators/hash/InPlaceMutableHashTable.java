@@ -771,6 +771,7 @@ public class InPlaceMutableHashTable<T> extends AbstractMutableHashTable<T> {
 		protected MemorySegment nextSegment(MemorySegment current, int positionInCurrent) throws EOFException {
 			currentSegmentIndex++;
 			if (currentSegmentIndex == segments.size()) {
+				// 重新分配segment
 				MemorySegment m = allocateSegment();
 				if (m == null) {
 					throw new EOFException();

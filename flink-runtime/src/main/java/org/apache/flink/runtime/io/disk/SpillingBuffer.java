@@ -37,11 +37,20 @@ import org.apache.flink.runtime.memory.AbstractPagedOutputView;
  * An output view that buffers written data in memory pages and spills them when they are full.
  */
 public class SpillingBuffer extends AbstractPagedOutputView {
-	
+
+	/**
+	 * 维护已经满的segment列表
+	 */
 	private final ArrayList<MemorySegment> fullSegments;
-	
+
+	/**
+	 * 用于提供segment
+	 */
 	private final MemorySegmentSource memorySource;
-	
+
+	/**
+	 * 用于将segment写入channel
+	 */
 	private BlockChannelWriter<MemorySegment> writer;
 	
 	private RandomAccessInputView inMemInView;
@@ -71,7 +80,7 @@ public class SpillingBuffer extends AbstractPagedOutputView {
 		// check if we are still in memory
 		if (this.writer == null) {
 			this.fullSegments.add(current);
-			
+			// 获取下一个segment，若为空，表示已经没有可用的segment
 			final MemorySegment nextSeg = this.memorySource.nextSegment();
 			if (nextSeg != null) {
 				return nextSeg;

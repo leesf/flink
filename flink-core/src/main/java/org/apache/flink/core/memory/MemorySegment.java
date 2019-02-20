@@ -1285,29 +1285,37 @@ public abstract class MemorySegment {
 	 * @return 0 if equal, -1 if seg1 &lt; seg2, 1 otherwise
 	 */
 	public final int compare(MemorySegment seg2, int offset1, int offset2, int len) {
+		// 长度大于8，则依次取出一个long进行比较
 		while (len >= 8) {
 			long l1 = this.getLongBigEndian(offset1);
 			long l2 = seg2.getLongBigEndian(offset2);
 
 			if (l1 != l2) {
+				//如果两个值不等，则需要计算出l1与l2的相对大小关系
+				//如果l1小于l2，则返回-1否则返回1，其中^符号为按位异或操作符
 				return (l1 < l2) ^ (l1 < 0) ^ (l2 < 0) ? -1 : 1;
 			}
 
+			//如果这八个字节完全相等，则将偏移指针向后移动八个字节，总长度减去八个字节，继续比较
 			offset1 += 8;
 			offset2 += 8;
 			len -= 8;
 		}
+		//如果总长度不够八个字节，则进行逐字节比较
 		while (len > 0) {
+			//两个内存段各自读取一个字节，跟八位全一的单字节进行按位与操作，各得到一个整数值，进行比较
 			int b1 = this.get(offset1) & 0xff;
 			int b2 = seg2.get(offset2) & 0xff;
 			int cmp = b1 - b2;
 			if (cmp != 0) {
 				return cmp;
 			}
+			//如果相等，则继续后移偏移指针，且长度减一
 			offset1++;
 			offset2++;
 			len--;
 		}
+		//一直比较到最后，如果走到这一步，则说明两个内存段中这两个区间的数据是相等的
 		return 0;
 	}
 

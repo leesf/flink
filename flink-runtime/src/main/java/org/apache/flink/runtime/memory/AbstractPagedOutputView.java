@@ -35,14 +35,29 @@ import java.io.UTFDataFormatException;
  */
 public abstract class AbstractPagedOutputView implements DataOutputView {
 
+	/**
+	 * 当前用于写入的memory segment
+	 */
 	private MemorySegment currentSegment;			// the current memory segment to write to
 
+	/**
+	 * memory segment的大小
+	 */
 	protected final int segmentSize;				// the size of the memory segments
 
+	/**
+	 * 读取segment时需要跳过的长度
+	 */
 	protected final int headerLength;				// the number of bytes to skip at the beginning of each segment
 
+	/**
+	 * 当前的位置
+	 */
 	private int positionInSegment;					// the offset in the current segment
 
+	/**
+	 * 
+	 */
 	private byte[] utfBuffer;						// the reusable array for UTF encodings
 
 

@@ -61,6 +61,7 @@ public final class HybridMemorySegment extends MemorySegment {
 	 *
 	 * @param buffer The byte buffer whose memory is represented by this memory segment.
 	 * @throws IllegalArgumentException Thrown, if the given ByteBuffer is not direct.
+	 * buffer必须是堆外内存，否则会抛出异常
 	 */
 	HybridMemorySegment(ByteBuffer buffer) {
 		this(buffer, null);
@@ -76,6 +77,7 @@ public final class HybridMemorySegment extends MemorySegment {
 	 * @param buffer The byte buffer whose memory is represented by this memory segment.
 	 * @param owner The owner references by this memory segment.
 	 * @throws IllegalArgumentException Thrown, if the given ByteBuffer is not direct.
+	 * 如果不是堆外内存则会抛出异常
 	 */
 	HybridMemorySegment(ByteBuffer buffer, Object owner) {
 		super(checkBufferAndGetAddress(buffer), buffer.capacity(), owner);
@@ -100,6 +102,8 @@ public final class HybridMemorySegment extends MemorySegment {
 	 *
 	 * @param buffer The byte array whose memory is represented by this memory segment.
 	 * @param owner The owner references by this memory segment.
+	 *
+	 * 表示堆内存
 	 */
 	HybridMemorySegment(byte[] buffer, Object owner) {
 		super(buffer, owner);
@@ -126,9 +130,11 @@ public final class HybridMemorySegment extends MemorySegment {
 	@Override
 	public ByteBuffer wrap(int offset, int length) {
 		if (address <= addressLimit) {
+			// 如果堆内内存不为空，则将其封装为ByteBuffer
 			if (heapMemory != null) {
 				return ByteBuffer.wrap(heapMemory, offset, length);
 			}
+			// 堆外内存不为空，则从堆外复制一段内存进行封装
 			else {
 				try {
 					ByteBuffer wrapper = offHeapBuffer.duplicate();
@@ -248,6 +254,9 @@ public final class HybridMemorySegment extends MemorySegment {
 	// -------------------------------------------------------------------------
 
 	@Override
+	/**
+	 * 将heapMemory中的数据写入out中
+	 */
 	public final void get(DataOutput out, int offset, int length) throws IOException {
 		if (address <= addressLimit) {
 			if (heapMemory != null) {
@@ -403,6 +412,7 @@ public final class HybridMemorySegment extends MemorySegment {
 
 	static {
 		try {
+			// 获取到堆外地址
 			ADDRESS_FIELD = java.nio.Buffer.class.getDeclaredField("address");
 			ADDRESS_FIELD.setAccessible(true);
 		}

@@ -476,6 +476,7 @@ public class StringValue implements NormalizableKey<StringValue>, CharSequence, 
 	
 	@Override
 	public void read(final DataInputView in) throws IOException {
+		// 读取数据的长度
 		int len = in.readUnsignedByte();
 
 		if (len >= HIGH_BIT) {

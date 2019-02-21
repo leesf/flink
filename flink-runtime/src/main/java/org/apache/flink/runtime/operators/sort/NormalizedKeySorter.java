@@ -64,13 +64,15 @@ public final class NormalizedKeySorter<T> implements InMemorySorter<T> {
 	private final TypeSerializer<T> serializer;
 	
 	private final TypeComparator<T> comparator;
-	
+
+	// 指向数据区
 	private final SimpleCollectingOutputView recordCollector;
 	
 	private final RandomAccessInputView recordBuffer;
 	
 	private final RandomAccessInputView recordBufferForComparison;
-	
+
+	// 指向指针区
 	private MemorySegment currentSortIndexSegment;
 	
 	private final ArrayList<MemorySegment> freeMemory;
@@ -267,11 +269,13 @@ public final class NormalizedKeySorter<T> implements InMemorySorter<T> {
 		//check whether we need a new memory segment for the sort index
 		if (this.currentSortIndexOffset > this.lastIndexEntryOffset) {
 			if (memoryAvailable()) {
+				// 取出下一个segment
 				this.currentSortIndexSegment = nextMemorySegment();
 				this.sortIndex.add(this.currentSortIndexSegment);
 				this.currentSortIndexOffset = 0;
 				this.sortIndexBytes += this.segmentSize;
 			} else {
+				// 表示无剩余空间写入
 				return false;
 			}
 		}
@@ -292,6 +296,7 @@ public final class NormalizedKeySorter<T> implements InMemorySorter<T> {
 		}
 		
 		// add the pointer and the normalized key
+		// 指针及键加入到指针区，同时后移指针偏移
 		this.currentSortIndexSegment.putLong(this.currentSortIndexOffset, shortRecord ?
 				this.currentDataBufferOffset : (this.currentDataBufferOffset | LARGE_RECORD_TAG));
 
@@ -329,7 +334,13 @@ public final class NormalizedKeySorter<T> implements InMemorySorter<T> {
 		this.recordBuffer.setReadPosition(pointer);
 		return this.serializer.deserialize(this.recordBuffer);
 	}
-	
+
+	/**
+	 * 比较两个指针对应的record内容
+	 * @param pointer1
+	 * @param pointer2
+	 * @return
+	 */
 	private int compareRecords(long pointer1, long pointer2) {
 		this.recordBuffer.setReadPosition(pointer1);
 		this.recordBufferForComparison.setReadPosition(pointer2);
@@ -355,10 +366,13 @@ public final class NormalizedKeySorter<T> implements InMemorySorter<T> {
 
 	@Override
 	public int compare(int i, int j) {
+		//计算得到第一个元素对应的键（或键前缀）位于指针区里对应的内存段的位置
 		final int segmentNumberI = i / this.indexEntriesPerSegment;
+		//计算得到第一个元素对应的键（或键前缀）位于指针区里对应的内存段内的相对偏移位置
 		final int segmentOffsetI = (i % this.indexEntriesPerSegment) * this.indexEntrySize;
-
+		//计算得到第二个元素对应的键（或键前缀）位于指针区里对应的内存段的位置
 		final int segmentNumberJ = j / this.indexEntriesPerSegment;
+		//计算得到第二个元素对应的键（或键前缀）位于指针区里对应的内存段内的相对偏移位置
 		final int segmentOffsetJ = (j % this.indexEntriesPerSegment) * this.indexEntrySize;
 
 		return compare(segmentNumberI, segmentOffsetI, segmentNumberJ, segmentOffsetJ);
@@ -371,13 +385,16 @@ public final class NormalizedKeySorter<T> implements InMemorySorter<T> {
 
 		int val = segI.compare(segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN, this.numKeyBytes);
 
+		// 如果比较结果不为零（说明不相等）或者完全由键决定比较结果，则返回比较结果，比较结束！
 		if (val != 0 || this.normalizedKeyFullyDetermines) {
 			return this.useNormKeyUninverted ? val : -val;
 		}
 
+		// 获取到指针
 		final long pointerI = segI.getLong(segmentOffsetI) & POINTER_MASK;
 		final long pointerJ = segJ.getLong(segmentOffsetJ) & POINTER_MASK;
 
+		// 比较记录
 		return compareRecords(pointerI, pointerJ);
 	}
 
@@ -394,9 +411,10 @@ public final class NormalizedKeySorter<T> implements InMemorySorter<T> {
 
 	@Override
 	public void swap(int segmentNumberI, int segmentOffsetI, int segmentNumberJ, int segmentOffsetJ) {
+		// 获取到两个segment
 		final MemorySegment segI = this.sortIndex.get(segmentNumberI);
 		final MemorySegment segJ = this.sortIndex.get(segmentNumberJ);
-
+		// 将两个内存段从指定的段内偏移位置开始的指定长度的数据进行按字节交换
 		segI.swapBytes(this.swapBuffer, segJ, segmentOffsetI, segmentOffsetJ, this.indexEntrySize);
 	}
 

@@ -30,13 +30,13 @@ import org.apache.flink.util.MathUtils;
 public class RandomAccessInputView extends AbstractPagedInputView implements SeekableDataInputView {
 	
 	private final ArrayList<MemorySegment> segments;
-	
+	// 当前segment索引
 	private int currentSegmentIndex;
-	
+	// segment位大小
 	private final int segmentSizeBits;
-	
+	// segment大小减一，用作&
 	private final int segmentSizeMask;
-	
+	// segment大小
 	private final int segmentSize;
 	
 	private final int limitInLastSegment;
@@ -59,7 +59,9 @@ public class RandomAccessInputView extends AbstractPagedInputView implements See
 
 	@Override
 	public void setReadPosition(long position) {
+		// 计算segment的索引，将其向右移动segment位大小即可
 		final int bufferNum = (int) (position >>> this.segmentSizeBits);
+		// 计算偏移量
 		final int offset = (int) (position & this.segmentSizeMask);
 		
 		this.currentSegmentIndex = bufferNum;

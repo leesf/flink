@@ -70,6 +70,9 @@ public class MemoryManager {
 	private final Object lock = new Object();
 
 	/** The memory pool from which we draw memory segments. Specific to on-heap or off-heap memory */
+	/**
+	 * 用于管理memory segments
+	 */
 	private final MemoryPool memoryPool;
 
 	/** Memory segments allocated per memory owner. */
@@ -306,12 +309,14 @@ public class MemoryManager {
 			}
 
 			if (isPreAllocated) {
+				// 预分配，从内存池中获取segment并加入到target中
 				for (int i = numPages; i > 0; i--) {
 					MemorySegment segment = memoryPool.requestSegmentFromPool(owner);
 					target.add(segment);
 					segmentsForOwner.add(segment);
 				}
 			}
+			// 非预分配，直接申请segment并加入到target中
 			else {
 				for (int i = numPages; i > 0; i--) {
 					MemorySegment segment = memoryPool.allocateNewSegment(owner);
@@ -362,11 +367,12 @@ public class MemoryManager {
 						this.allocatedSegments.remove(owner);
 					}
 				}
-
+				// 如果是预分配则将其归还给内存池
 				if (isPreAllocated) {
 					// release the memory in any case
 					memoryPool.returnSegmentToPool(segment);
 				}
+				//否则（按需分配的情况，内存是即时分配的）将该内存直接释放，未分配内存页总数加一
 				else {
 					segment.free();
 					numNonAllocatedPages++;
@@ -608,6 +614,9 @@ public class MemoryManager {
 		abstract void clear();
 	}
 
+	/**
+	 * 堆内内存池
+	 */
 	static final class HybridHeapMemoryPool extends MemoryPool {
 
 		/** The collection of available memory segments. */
@@ -626,6 +635,7 @@ public class MemoryManager {
 
 		@Override
 		MemorySegment allocateNewSegment(Object owner) {
+			// 申请新的segment，不属于内存池
 			return MemorySegmentFactory.allocateUnpooledSegment(segmentSize, owner);
 		}
 
@@ -658,6 +668,9 @@ public class MemoryManager {
 		}
 	}
 
+	/**
+	 * 堆外内存池
+	 */
 	static final class HybridOffHeapMemoryPool extends MemoryPool {
 
 		/** The collection of available memory segments. */

@@ -34,12 +34,24 @@ import java.io.UTFDataFormatException;
  */
 public abstract class AbstractPagedInputView implements DataInputView {
 
+	/**
+	 * 当前使用的segment
+	 */
 	private MemorySegment currentSegment;
 
+	/**
+	 * 写segment跳过的长度
+	 */
 	protected final int headerLength;				// the number of bytes to skip at the beginning of each segment
 
+	/**
+	 * 当前写入的位置
+	 */
 	private int positionInSegment;					// the offset in the current segment
 
+	/**
+	 * segment的尾
+	 */
 	private int limitInSegment;						// the limit in the current segment before switching to the next
 
 	private byte[] utfByteBuffer;					// reusable byte buffer for utf-8 decoding
@@ -156,6 +168,7 @@ public abstract class AbstractPagedInputView implements DataInputView {
 	protected final void advance() throws IOException {
 		// note: this code ensures that in case of EOF, we stay at the same position such that
 		// EOF is reproducible (if nextSegment throws a reproducible EOFException)
+		// 获取下一个segment相关信息
 		this.currentSegment = nextSegment(this.currentSegment);
 		this.limitInSegment = getLimitForSegment(this.currentSegment);
 		this.positionInSegment = this.headerLength;
@@ -201,13 +214,16 @@ public abstract class AbstractPagedInputView implements DataInputView {
 			throw new IndexOutOfBoundsException();
 		}
 
+		// 计算segment剩余长度
 		int remaining = this.limitInSegment - this.positionInSegment;
 		if (remaining >= len) {
+			// 剩余长度大于要读取的长度，则直接将segment的内容读取到字节数组中
 			this.currentSegment.get(this.positionInSegment, b, off, len);
 			this.positionInSegment += len;
 			return len;
 		}
 		else {
+			// 剩余长度为0，则找下一个segment
 			if (remaining == 0) {
 				try {
 					advance();
@@ -215,17 +231,23 @@ public abstract class AbstractPagedInputView implements DataInputView {
 				catch (EOFException eof) {
 					return -1;
 				}
+				// 重新计算剩余长度
 				remaining = this.limitInSegment - this.positionInSegment;
 			}
 
 			int bytesRead = 0;
 			while (true) {
+				// 待读取的长度
 				int toRead = Math.min(remaining, len - bytesRead);
+				// 将其从segment读取至b中
 				this.currentSegment.get(this.positionInSegment, b, off, toRead);
+				// 重新计算偏移量
 				off += toRead;
+				// 已读取的长度
 				bytesRead += toRead;
 
 				if (len > bytesRead) {
+					// 找下一个segment并重新计算剩余长度
 					try {
 						advance();
 					}
@@ -236,6 +258,7 @@ public abstract class AbstractPagedInputView implements DataInputView {
 					remaining = this.limitInSegment - this.positionInSegment;
 				}
 				else {
+					// 读取完成
 					this.positionInSegment += toRead;
 					break;
 				}

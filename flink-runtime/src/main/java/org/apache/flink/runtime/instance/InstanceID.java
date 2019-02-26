@@ -22,6 +22,7 @@ import org.apache.flink.util.AbstractID;
 
 /**
  * Class for statistically unique instance IDs.
+ * 用于唯一指定Instance.
  */
 public class InstanceID extends AbstractID {
 	private static final long serialVersionUID = 1L;

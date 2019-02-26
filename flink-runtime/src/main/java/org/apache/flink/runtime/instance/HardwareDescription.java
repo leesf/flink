@@ -28,6 +28,7 @@ import java.util.Objects;
 
 /**
  * A hardware description describes the resources available to a task manager.
+ * 表述一个特定的TaskManager所拥有的硬件资源
  */
 public final class HardwareDescription implements Serializable {
 
@@ -41,19 +42,27 @@ public final class HardwareDescription implements Serializable {
 
 	public static final String FIELD_NAME_SIZE_MANAGED_MEMORY = "managedMemory";
 
-	/** The number of CPU cores available to the JVM on the compute node. */
+	/** The number of CPU cores available to the JVM on the compute node.
+	 *  所在计算节点的JVM可用的CPU核数
+	 * */
 	@JsonProperty(FIELD_NAME_CPU_CORES)
 	private final int numberOfCPUCores;
 
-	/** The size of physical memory in bytes available on the compute node. */
+	/** The size of physical memory in bytes available on the compute node.
+	 * 所在计算节点的物理内存的字节数
+	 * */
 	@JsonProperty(FIELD_NAME_SIZE_PHYSICAL_MEMORY)
 	private final long sizeOfPhysicalMemory;
 
-	/** The size of the JVM heap memory */
+	/** The size of the JVM heap memory
+	 * JVM的堆内存大小
+	 * */
 	@JsonProperty(FIELD_NAME_SIZE_JVM_HEAP)
 	private final long sizeOfJvmHeap;
 
-	/** The size of the memory managed by the system for caching, hashing, sorting, ... */
+	/** The size of the memory managed by the system for caching, hashing, sorting, ...
+	 * 被Flink的MemoryManager所管理的内存大小
+	 * */
 	@JsonProperty(FIELD_NAME_SIZE_MANAGED_MEMORY)
 	private final long sizeOfManagedMemory;
 

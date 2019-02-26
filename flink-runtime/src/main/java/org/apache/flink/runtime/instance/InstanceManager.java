@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Simple manager that keeps track of which TaskManager are available and alive.
+ * 用于管理TaskManager.
  */
 public class InstanceManager {
 
@@ -58,7 +59,9 @@ public class InstanceManager {
 	/** Listeners that want to be notified about availability and disappearance of instances */
 	private final List<InstanceListener> instanceListeners = new ArrayList<>();
 
-	/** The total number of task slots that the system has */
+	/** The total number of task slots that the system has
+	 * 管理的所有slot数量
+	 * */
 	private int totalNumberOfAliveTaskSlots;
 
 	/** Flag marking the system as shut down */
@@ -95,6 +98,11 @@ public class InstanceManager {
 		}
 	}
 
+	/**
+	 * 上报心跳
+	 * @param instanceId
+	 * @return
+	 */
 	public boolean reportHeartBeat(InstanceID instanceId) {
 		if (instanceId == null) {
 			throw new IllegalArgumentException("InstanceID may not be null.");
@@ -105,9 +113,10 @@ public class InstanceManager {
 				return false;
 			}
 
+			// 获取该Instance(TaskManager)
 			Instance host = registeredHostsById.get(instanceId);
 
-			if (host == null){
+			if (host == null) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Received heartbeat from unknown TaskManager with instance ID " + instanceId.toString() +
 							" Possibly TaskManager was marked as dead (timed-out) earlier. " +
@@ -115,7 +124,7 @@ public class InstanceManager {
 				}
 				return false;
 			}
-
+			// 上报心跳
 			host.reportHeartBeat();
 
 			LOG.trace("Received heartbeat from TaskManager {}", host);
@@ -144,20 +153,20 @@ public class InstanceManager {
 			if (this.isShutdown) {
 				throw new IllegalStateException("InstanceManager is shut down.");
 			}
-
+			// 安全性检查，看之前是否已注册过，如果已注册过则抛出异常
 			Instance prior = registeredHostsByResource.get(taskManagerLocation.getResourceID());
 			if (prior != null) {
 				throw new IllegalStateException("Registration attempt from TaskManager at "
 					+ taskManagerLocation.addressString() +
 					". This connection is already registered under ID " + prior.getId());
 			}
-
+			//看当前注册的TaskManager是否在失效集合中，如果在则移除并打印日志
 			boolean wasDead = this.deadHosts.remove(taskManagerLocation.getResourceID());
 			if (wasDead) {
 				LOG.info("Registering TaskManager at " + taskManagerLocation.addressString() +
 						" which was marked as dead earlier because of a heart-beat timeout.");
 			}
-
+			//创建即将注册的TaskManager对应的Instance的标识InstanceID
 			InstanceID instanceID = new InstanceID();
 
 			Instance host = new Instance(
@@ -167,6 +176,7 @@ public class InstanceManager {
 				resources,
 				numberOfSlots);
 
+			// 放入缓存
 			registeredHostsById.put(instanceID, host);
 			registeredHostsByResource.put(taskManagerLocation.getResourceID(), host);
 
@@ -198,10 +208,10 @@ public class InstanceManager {
 	 *
 	 * @param instanceId TaskManager which is about to be marked dead.
 	 */
-	public void unregisterTaskManager(InstanceID instanceId, boolean terminated){
+	public void unregisterTaskManager(InstanceID instanceId, boolean terminated) {
 		Instance instance = registeredHostsById.get(instanceId);
 
-		if (instance != null){
+		if (instance != null) {
 			registeredHostsById.remove(instance.getId());
 			registeredHostsByResource.remove(instance.getTaskManagerID());
 

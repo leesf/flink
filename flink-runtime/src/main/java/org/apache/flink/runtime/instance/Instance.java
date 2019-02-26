@@ -44,6 +44,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 /**
  * An instance represents a {@link org.apache.flink.runtime.taskmanager.TaskManager}
  * registered at a JobManager and ready to receive work.
+ * 一个Instance表示一个TaskManager，注册在JobManager上.
  */
 public class Instance implements SlotOwner {
 
@@ -52,13 +53,17 @@ public class Instance implements SlotOwner {
 	/** The lock on which to synchronize allocations and failure state changes */
 	private final Object instanceLock = new Object();
 
-	/** The instance gateway to communicate with the instance */
+	/** The instance gateway to communicate with the instance
+	 * 用于和TaskManager进行交互
+	 * */
 	private final TaskManagerGateway taskManagerGateway;
 
 	/** The instance connection information for the data transfer. */
 	private final TaskManagerLocation location;
 
-	/** A description of the resources of the task manager */
+	/** A description of the resources of the task manager
+	 * TaskManager所拥有的资源
+	 * */
 	private final HardwareDescription resources;
 
 	/** The ID identifying the taskManager. */
@@ -67,10 +72,14 @@ public class Instance implements SlotOwner {
 	/** The number of task slots available on the node */
 	private final int numberOfSlots;
 
-	/** A list of available slot positions */
+	/** A list of available slot positions
+	 * 存储可用槽索引的队列
+	 * */
 	private final Queue<Integer> availableSlots;
 
-	/** Allocated slots on this taskManager */
+	/** Allocated slots on this taskManager
+	 * 存储当前TaskManager已分配的槽集合
+	 * */
 	private final Set<Slot> allocatedSlots = new HashSet<Slot>();
 
 	/** A listener to be notified upon new slot availability */
@@ -140,6 +149,9 @@ public class Instance implements SlotOwner {
 		return !isDead;
 	}
 
+	/**
+	 * 标记TaskManager死亡
+	 */
 	public void markDead() {
 
 		// create a copy of the slots to avoid concurrent modification exceptions
@@ -229,6 +241,7 @@ public class Instance implements SlotOwner {
 				return null;
 			}
 			else {
+				// 创建SimpleSlot对象将slot的索引及当前Instance的实例通过构造方法注入
 				SimpleSlot slot = new SimpleSlot(this, location, nextSlot, taskManagerGateway);
 				allocatedSlots.add(slot);
 				return slot;
@@ -254,18 +267,20 @@ public class Instance implements SlotOwner {
 			if (isDead) {
 				throw new InstanceDiedException(this);
 			}
-
+			// 下一个可用slot索引
 			Integer nextSlot = availableSlots.poll();
 			if (nextSlot == null) {
 				return null;
 			}
 			else {
+
 				SharedSlot slot = new SharedSlot(
 					this,
 					location,
 					nextSlot,
 					taskManagerGateway,
 					sharingGroupAssignment);
+				// 将slot加入已分配的集合
 				allocatedSlots.add(slot);
 				return slot;
 			}
@@ -291,6 +306,7 @@ public class Instance implements SlotOwner {
 		checkArgument(!slot.isAlive(), "slot is still alive");
 		checkArgument(slot.getOwner() == this, "slot belongs to the wrong TaskManager.");
 
+		// 将slot标记为released状态
 		if (slot.markReleased()) {
 			LOG.debug("Return allocated slot {}.", slot);
 			synchronized (instanceLock) {
@@ -298,10 +314,13 @@ public class Instance implements SlotOwner {
 					return CompletableFuture.completedFuture(false);
 				}
 
+				// 移除该slot
 				if (this.allocatedSlots.remove(slot)) {
+					// 添加至可用slot中
 					this.availableSlots.add(slot.getSlotNumber());
 
 					if (this.slotAvailabilityListener != null) {
+						// 通知有可用的slot
 						this.slotAvailabilityListener.newSlotAvailable(this);
 					}
 

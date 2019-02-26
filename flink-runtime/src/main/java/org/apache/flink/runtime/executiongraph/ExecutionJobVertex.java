@@ -160,7 +160,7 @@ public class ExecutionJobVertex implements AccessExecutionJobVertex, Archiveable
 
 		this.graph = graph;
 		this.jobVertex = jobVertex;
-
+		// vertex的并行度
 		int vertexParallelism = jobVertex.getParallelism();
 		int numTaskVertices = vertexParallelism > 0 ? vertexParallelism : defaultParallelism;
 

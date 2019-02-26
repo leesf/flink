@@ -344,6 +344,9 @@ class JobManager(
         // TriggerRegistrationAtJobManager messages to the old ResourceManager
       }
 
+    /**
+      * 注册一个TaskManager
+      */
     case msg @ RegisterTaskManager(
           resourceId,
           connectionInfo,

@@ -362,8 +362,8 @@ public class SharedSlotsTest extends TestLogger {
 			assertEquals(0, assignment.getNumberOfAvailableSlotsForGroup(vid3));
 			assertEquals(1, assignment.getNumberOfSlots());
 			
-			sub3.releaseSlot();
-			sub1.releaseSlot();
+			sub3.releaseSlot(null);
+			sub1.releaseSlot(null);
 
 			assertTrue(sharedSlot.isReleased());
 			assertEquals(0, sharedSlot.getNumberLeaves());

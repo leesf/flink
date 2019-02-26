@@ -95,7 +95,9 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 	/** All instances that still have available resources */
 	private final Map<ResourceID, Instance> instancesWithAvailableResources = new LinkedHashMap<>();
 	
-	/** All tasks pending to be scheduled */
+	/** All tasks pending to be scheduled
+	 * 等待调度的Task
+	 * */
 	private final Queue<QueuedTask> taskQueue = new ArrayDeque<QueuedTask>();
 	
 	
@@ -187,6 +189,7 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 			LOG.debug("Scheduling task " + task);
 		}
 
+		// 获取待执行的EV
 		final ExecutionVertex vertex = task.getTaskToExecute().getVertex();
 		
 		final boolean forceExternalLocation = false &&

@@ -54,7 +54,9 @@ public class SharedSlot extends Slot implements LogicalSlot {
 	/** The assignment group os shared slots that manages the availability and release of the slots */
 	private final SlotSharingGroupAssignment assignmentGroup;
 
-	/** The set os sub-slots allocated from this shared slot */
+	/** The set os sub-slots allocated from this shared slot
+	 * 用于存储当前槽的所有子槽集合
+	 * */
 	private final Set<Slot> subSlots;
 
 	// ------------------------------------------------------------------------

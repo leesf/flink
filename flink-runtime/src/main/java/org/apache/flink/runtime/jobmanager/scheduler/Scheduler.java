@@ -563,7 +563,10 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 			}
 		});
 	}
-	
+
+	/**
+	 * 处理新的slot
+	 */
 	private void handleNewSlot() {
 		
 		synchronized (globalLock) {
@@ -572,16 +575,19 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 				// someone else took it
 				return;
 			}
-			
+
+			// 取出Task(不弹出元素)
 			QueuedTask queued = taskQueue.peek();
 			
 			// the slot was properly released, we can allocate a new one from that instance
 			
 			if (queued != null) {
 				ScheduledUnit task = queued.getTask();
+				// 获取对应的EV
 				ExecutionVertex vertex = task.getTaskToExecute().getVertex();
 				
 				try {
+					// 分配一个slot
 					SimpleSlot newSlot = instance.allocateSimpleSlot();
 					if (newSlot != null) {
 						
@@ -670,9 +676,11 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 			
 			try {
 				// make sure we get notifications about slots becoming available
+				// 设置instance的Listener
 				instance.setSlotAvailabilityListener(this);
 				
 				// store the instance in the by-host-lookup
+				// 获取主机对应的Instance列表
 				String instanceHostName = instance.getTaskManagerLocation().getHostname();
 				Set<Instance> instanceSet = allInstancesByHost.get(instanceHostName);
 				if (instanceSet == null) {
@@ -685,6 +693,7 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 				this.instancesWithAvailableResources.put(instance.getTaskManagerID(), instance);
 
 				// add all slots as available
+				// instance的所有slot设置为可用
 				for (int i = 0; i < instance.getNumberOfAvailableSlots(); i++) {
 					newSlotAvailable(instance);
 				}

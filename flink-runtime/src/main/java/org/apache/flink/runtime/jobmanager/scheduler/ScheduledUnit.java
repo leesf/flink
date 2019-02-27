@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 /**
  * ScheduledUnit contains the information necessary to allocate a slot for the given
  * {@link JobVertexID}.
+ * 进行调度的单元
  */
 public class ScheduledUnit {
 

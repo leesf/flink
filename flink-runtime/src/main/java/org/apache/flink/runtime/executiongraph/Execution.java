@@ -174,7 +174,7 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 	 * Prevents final accumulators to be overwritten by partial accumulators on a late heartbeat. */
 	private final Object accumulatorLock = new Object();
 
-	/* Continuously updated map of user-defined accumulators */
+	/** Continuously updated map of user-defined accumulators. */
 	private volatile Map<String, Accumulator<?, ?>> userAccumulators;
 
 	private volatile IOMetrics ioMetrics;

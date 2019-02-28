@@ -274,10 +274,11 @@ public class SlotSharingGroupAssignment {
 	 */
 	public SimpleSlot getSlotForTask(JobVertexID vertexID, Iterable<TaskManagerLocation> locationPreferences) {
 		synchronized (lock) {
+			// 可分配至非本地TaskManager的slot
 			Tuple2<SharedSlot, Locality> p = getSharedSlotForTask(vertexID, locationPreferences, false);
-
 			if (p != null) {
 				SharedSlot ss = p.f0;
+				// 分配simple slot
 				SimpleSlot slot = ss.allocateSubSlot(vertexID);
 				slot.setLocality(p.f1);
 				return slot;
@@ -382,7 +383,13 @@ public class SlotSharingGroupAssignment {
 		}
 	}
 
-
+	/**
+	 * 获取share slot
+	 * @param groupId
+	 * @param preferredLocations
+	 * @param localOnly
+	 * @return
+	 */
 	public Tuple2<SharedSlot, Locality> getSharedSlotForTask(
 			AbstractID groupId,
 			Iterable<TaskManagerLocation> preferredLocations,

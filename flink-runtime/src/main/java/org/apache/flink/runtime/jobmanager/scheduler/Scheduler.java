@@ -76,6 +76,7 @@ import java.util.concurrent.TimeUnit;
  *     <li>Queued Scheduling: A request for a task slot is queued and returns a future that will be
  *         fulfilled as soon as a slot becomes available.</li>
  * </ul>
+ * 进行任务调度
  */
 public class Scheduler implements InstanceListener, SlotAvailabilityListener, SlotProvider {
 
@@ -86,7 +87,9 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 	/** All modifications to the scheduler structures are performed under a global scheduler lock */
 	private final Object globalLock = new Object();
 	
-	/** All instances that the scheduler can deploy to */
+	/** All instances that the scheduler can deploy to
+	 * 所有TaskManager
+	 * */
 	private final Set<Instance> allInstances = new HashSet<Instance>();
 	
 	/** All instances by hostname */
@@ -154,6 +157,7 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 			Time allocationTimeout) {
 
 		try {
+			// 调度任务，返回的是一个SimpleSlot或者一个Future对象
 			final Object ret = scheduleTask(task, allowQueued, slotProfile.getPreferredLocations());
 
 			if (ret instanceof SimpleSlot) {
@@ -196,22 +200,25 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 									preferredLocations != null && preferredLocations.iterator().hasNext();
 	
 		synchronized (globalLock) {
-			
+
+			// 获取到该JobVertex的共享组
 			SlotSharingGroup sharingUnit = vertex.getJobVertex().getSlotSharingGroup();
 			
 			if (sharingUnit != null) {
 
 				// 1)  === If the task has a slot sharing group, schedule with shared slots ===
-				
+				//如果被调度的任务属于某SlotSharingGroup，则它不被允许延迟调度，因此如果检测到其允许延迟调度将会抛出异常
 				if (queueIfNoResource) {
 					throw new IllegalArgumentException(
 							"A task with a vertex sharing group was scheduled in a queued fashion.");
 				}
-				
+
+				//根据调度单元获得当前被调度任务的SlotSharingGroupAssignment和CoLocationConstraint
 				final SlotSharingGroupAssignment assignment = sharingUnit.getTaskAssignment();
 				final CoLocationConstraint constraint = task.getCoLocationConstraint();
 				
 				// sanity check that we do not use an externally forced location and a co-location constraint together
+				//如果当前任务存在位置约束且又被强制调度到外部位置这样的矛盾情况出现时，将会直接抛出异常
 				if (constraint != null && forceExternalLocation) {
 					throw new IllegalArgumentException("The scheduling cannot be constrained simultaneously by a "
 							+ "co-location constraint and an external location constraint.");
@@ -260,7 +267,8 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 						locations = preferredLocations;
 						localOnly = forceExternalLocation;
 					}
-					
+
+					// 新生成一个slot
 					newSlot = getNewSlotForSharingGroup(vertex, locations, assignment, constraint, localOnly);
 
 					if (newSlot == null) {
@@ -333,7 +341,8 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 			else {
 				
 				// 2) === schedule without hints and sharing ===
-				
+				// 直接请求一个槽，如果请求到则直接返回，如果请求不到则根据是否允许延迟调度作出决策，
+				// 如果允许延迟调度则直接将调度请求加入队列，如果不允许延迟调度则直接抛出异常
 				SimpleSlot slot = getFreeSlotForTask(vertex, preferredLocations, forceExternalLocation);
 				if (slot != null) {
 					updateLocalityCounters(slot, vertex);

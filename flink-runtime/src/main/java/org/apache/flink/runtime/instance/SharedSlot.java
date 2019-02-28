@@ -249,6 +249,7 @@ public class SharedSlot extends Slot implements LogicalSlot {
 	 */
 	SimpleSlot allocateSubSlot(AbstractID groupId) {
 		if (isAlive()) {
+			// 分配simple slot
 			SimpleSlot slot = new SimpleSlot(
 				getOwner(),
 				getTaskManagerLocation(),
@@ -274,6 +275,7 @@ public class SharedSlot extends Slot implements LogicalSlot {
 	 * @return The new sub slot if the shared slot is still alive, otherwise null.
 	 */
 	SharedSlot allocateSharedSlot(AbstractID groupId){
+		// slot存活，则进行分配，否则直接返回null
 		if (isAlive()) {
 			SharedSlot slot = new SharedSlot(
 				getOwner(),

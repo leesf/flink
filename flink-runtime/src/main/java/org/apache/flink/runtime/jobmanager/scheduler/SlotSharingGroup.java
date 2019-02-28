@@ -34,8 +34,10 @@ import org.apache.flink.runtime.jobgraph.JobVertexID;
 public class SlotSharingGroup implements java.io.Serializable {
 	
 	private static final long serialVersionUID = 1L;
-	
 
+	/**
+	 * 可以共享槽的JobVertex
+	 */
 	private final Set<JobVertexID> ids = new TreeSet<JobVertexID>();
 	
 	/** Mapping of tasks to subslots. This field is only needed inside the JobManager, and is not RPCed. */

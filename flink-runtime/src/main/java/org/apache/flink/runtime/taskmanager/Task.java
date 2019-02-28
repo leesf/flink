@@ -357,6 +357,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 
 		int counter = 0;
 
+		// 根据descriptor创建ResultPartition
 		for (ResultPartitionDeploymentDescriptor desc: resultPartitionDeploymentDescriptors) {
 			ResultPartitionID partitionId = new ResultPartitionID(desc.getPartitionId(), executionId);
 
@@ -382,6 +383,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 
 		counter = 0;
 
+		// 根据descriptor创建InputGate
 		for (InputGateDeploymentDescriptor inputGateDeploymentDescriptor: inputGateDeploymentDescriptors) {
 			SingleInputGate gate = SingleInputGate.create(
 				taskNameWithSubtaskAndId,

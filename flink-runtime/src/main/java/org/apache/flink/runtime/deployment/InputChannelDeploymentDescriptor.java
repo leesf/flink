@@ -49,10 +49,14 @@ public class InputChannelDeploymentDescriptor implements Serializable {
 
 	private static final long serialVersionUID = 373711381640454080L;
 
-	/** The ID of the partition the input channel is going to consume. */
+	/** The ID of the partition the input channel is going to consume.
+	 * 用于进行消费的partition id.
+	 * */
 	private final ResultPartitionID consumedPartitionId;
 
-	/** The location of the partition the input channel is going to consume. */
+	/** The location of the partition the input channel is going to consume.
+	 * 用于进行消费的partition location.
+	 * */
 	private final ResultPartitionLocation consumedPartitionLocation;
 
 	public InputChannelDeploymentDescriptor(
@@ -115,7 +119,7 @@ public class InputChannelDeploymentDescriptor implements Serializable {
 					partitionLocation = ResultPartitionLocation.createLocal();
 				}
 				else {
-					// Different instances => remote
+					// Different instances => remote,连接到远端的TaskManager.
 					final ConnectionID connectionId = new ConnectionID(
 							partitionTaskManagerLocation,
 							consumedPartition.getIntermediateResult().getConnectionIndex());

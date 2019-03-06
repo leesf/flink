@@ -93,6 +93,7 @@ public class BufferConsumer implements Closeable {
 	public Buffer build() {
 		writerPosition.update();
 		int cachedWriterPosition = writerPosition.getCached();
+		// 读取所有未被消费的数据
 		Buffer slice = buffer.readOnlySlice(currentReaderPosition, cachedWriterPosition - currentReaderPosition);
 		currentReaderPosition = cachedWriterPosition;
 		return slice.retainBuffer();

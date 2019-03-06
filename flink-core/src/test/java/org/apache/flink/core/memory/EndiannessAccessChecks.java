@@ -132,9 +132,11 @@ public class EndiannessAccessChecks {
 			rnd.setSeed(seed);
 			for (int i = 0; i < 10000; i++) {
 				float val = rnd.nextFloat();
-				int pos = rnd.nextInt(segment.size - 3);
+				//int pos = rnd.nextInt(segment.size - 3);
+				int pos = segment.size - 4;
 
 				segment.putFloatLittleEndian(pos, val);
+				pos = segment.size - 1;
 				float r = segment.getFloatBigEndian(pos);
 				float reversed = Float.intBitsToFloat(Integer.reverseBytes(Float.floatToRawIntBits(r)));
 				assertEquals(val, reversed, 0.0f);

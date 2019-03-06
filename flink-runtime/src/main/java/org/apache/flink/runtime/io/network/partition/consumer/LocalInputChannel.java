@@ -182,7 +182,7 @@ public class LocalInputChannel extends InputChannel implements BufferAvailabilit
 			// we could do that by letting the timer insert a special "requesting channel" into the input gate's queue
 			subpartitionView = checkAndWaitForSubpartitionView();
 		}
-
+		// 获取Buffer和subpartition还存在的所有Buffer.
 		BufferAndBacklog next = subpartitionView.getNextBuffer();
 
 		if (next == null) {

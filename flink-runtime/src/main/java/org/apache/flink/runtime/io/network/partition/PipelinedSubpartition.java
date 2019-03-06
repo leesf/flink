@@ -151,8 +151,9 @@ class PipelinedSubpartition extends ResultSubpartition {
 			}
 
 			while (!buffers.isEmpty()) {
+				// 从该parition中取出数据
 				BufferConsumer bufferConsumer = buffers.peek();
-
+				// 构造成Buffer
 				buffer = bufferConsumer.build();
 
 				checkState(bufferConsumer.isFinished() || buffers.size() == 1,
@@ -171,6 +172,7 @@ class PipelinedSubpartition extends ResultSubpartition {
 				if (buffer.readableBytes() > 0) {
 					break;
 				}
+				// 引用减1
 				buffer.recycleBuffer();
 				buffer = null;
 				if (!bufferConsumer.isFinished()) {

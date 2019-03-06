@@ -521,7 +521,7 @@ public class SingleInputGate implements InputGate {
 		if (isReleased) {
 			throw new IllegalStateException("Released");
 		}
-
+		// 请求partition,会初始化PartitionView.
 		requestPartitions();
 
 		InputChannel currentChannel;

@@ -161,15 +161,14 @@ public class WordCount {
 
 		}
 
-		DataStream<Tuple2<String, Integer>> counts =
+		//DataStream<Tuple2<String, Integer>> counts =
 			// split up the lines in pairs (2-tuples) containing: (word,1)
-			text.flatMap(new Tokenizer()).setParallelism(256);
+		//	text.flatMap(new Tokenizer()).setParallelism(1);
 			// group by the tuple field "0" and sum up tuple field "1"
 			//.keyBy(0).sum(1).setParallelism(3);
-
 		// emit result
 		System.out.println("Printing result to stdout. Use --output to specify output path.");
-		counts.addSink(new CustomSink()).setParallelism(4);
+		text.flatMap(new Tokenizer()).setParallelism(1).addSink(new CustomSink()).setParallelism(4);
 		//text.addSink(new CustomSimpleSink()).setParallelism(2);
 
 		// execute program

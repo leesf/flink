@@ -168,7 +168,7 @@ public class WordCount {
 			//.keyBy(0).sum(1).setParallelism(3);
 		// emit result
 		System.out.println("Printing result to stdout. Use --output to specify output path.");
-		text.flatMap(new Tokenizer()).setParallelism(1).addSink(new CustomSink()).setParallelism(4);
+		text.flatMap(new Tokenizer()).setParallelism(1).addSink(new CustomSink()).setParallelism(2);
 		//text.addSink(new CustomSimpleSink()).setParallelism(2);
 
 		// execute program

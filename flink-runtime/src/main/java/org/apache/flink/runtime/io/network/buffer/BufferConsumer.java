@@ -39,9 +39,13 @@ import static org.apache.flink.util.Preconditions.checkState;
 @NotThreadSafe
 public class BufferConsumer implements Closeable {
 	private final Buffer buffer;
-
+	/**
+	 * 写入的位置标记
+	 */
 	private final CachedPositionMarker writerPosition;
-
+	/**
+	 * 当前读取位置
+	 */
 	private int currentReaderPosition;
 
 	/**
@@ -158,6 +162,7 @@ public class BufferConsumer implements Closeable {
 		}
 
 		private void update() {
+			// 获取已写入的位置
 			this.cachedPosition = positionMarker.get();
 		}
 	}

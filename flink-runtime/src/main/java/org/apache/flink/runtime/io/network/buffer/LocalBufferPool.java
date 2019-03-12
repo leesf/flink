@@ -92,7 +92,7 @@ class LocalBufferPool implements BufferPool {
 	 * somehow referenced through this pool (e.g. wrapped in Buffer instances or as available segments).
 	 */
 	/**
-	 * 请求的MemorySegment总数
+	 * 成功请求的MemorySegment总数,当其大于currentPoolSize时，需要归还
 	 */
 	private int numberOfRequestedMemorySegments;
 
@@ -263,7 +263,7 @@ class LocalBufferPool implements BufferPool {
 				if (isDestroyed) {
 					throw new IllegalStateException("Buffer pool is destroyed.");
 				}
-
+				// 没有可用的MS，并且请求的大小小于当前缓存池的大小，则直接networkBufferPool请求MS.
 				if (numberOfRequestedMemorySegments < currentPoolSize) {
 					final MemorySegment segment = networkBufferPool.requestMemorySegment();
 
@@ -297,12 +297,16 @@ class LocalBufferPool implements BufferPool {
 		NotificationResult notificationResult = NotificationResult.BUFFER_NOT_USED;
 		while (!notificationResult.isBufferUsed()) {
 			synchronized (availableMemorySegments) {
+				// 已经释放了或者已申请的MS大于当前缓存池大小
 				if (isDestroyed || numberOfRequestedMemorySegments > currentPoolSize) {
+					// 归还MS
 					returnMemorySegment(segment);
 					return;
 				} else {
+					// 取出一个Listener.
 					listener = registeredListeners.poll();
 					if (listener == null) {
+						// 没有Listener.则将不用的segment放入集合中
 						availableMemorySegments.add(segment);
 						availableMemorySegments.notify();
 						return;
@@ -318,12 +322,14 @@ class LocalBufferPool implements BufferPool {
 		// notification and which other threads also access them.
 		// -> call notifyBufferAvailable() outside of the synchronized block to avoid a deadlock (FLINK-9676)
 		NotificationResult notificationResult = listener.notifyBufferAvailable(new NetworkBuffer(segment, this));
+		// 还需要Buffer.
 		if (notificationResult.needsMoreBuffers()) {
 			synchronized (availableMemorySegments) {
 				if (isDestroyed) {
 					// cleanup tasks how they would have been done if we only had one synchronized block
 					listener.notifyBufferDestroyed();
 				} else {
+					// 继续注册Listener.
 					registeredListeners.add(listener);
 				}
 			}
@@ -431,7 +437,7 @@ class LocalBufferPool implements BufferPool {
 			if (segment == null) {
 				return;
 			}
-
+			// 归还MS,会将numberOfRequestedMemorySegments减1
 			returnMemorySegment(segment);
 		}
 	}

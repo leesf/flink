@@ -30,6 +30,7 @@ import java.util.Arrays;
 
 /**
  * A simple and efficient serializer for the {@link java.io.DataOutput} interface.
+ * 将Record写入
  */
 public class DataOutputSerializer implements DataOutputView {
 

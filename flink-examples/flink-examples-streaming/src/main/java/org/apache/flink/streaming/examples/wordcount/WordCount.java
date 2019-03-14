@@ -41,6 +41,7 @@ import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 
 /**
@@ -134,7 +135,14 @@ public class WordCount {
 	// *************************************************************************
 	final static Logger LOGGER = LoggerFactory.getLogger(WordCount.class);
 	public static void main(String[] args) throws Exception {
-
+		/*ByteBuffer buffer = ByteBuffer.allocate(10);
+		System.out.println("limit " + buffer.limit() + ", position " + buffer.position() + ", capacity " + buffer.capacity());
+		buffer.position(0);
+		buffer.limit(0);
+		buffer.put(1, (byte)1);
+		buffer.put(2, (byte)2);
+		buffer.flip();
+		System.out.println("limit " + buffer.limit() + ", position " + buffer.position() + ", capacity " + buffer.capacity());*/
 		// Checking input parameters
 		final ParameterTool params = ParameterTool.fromArgs(args);
 

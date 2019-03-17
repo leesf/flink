@@ -542,9 +542,10 @@ public class SingleInputGate implements InputGate {
 						return Optional.empty();
 					}
 				}
-
+				// 弹出Channel.
 				currentChannel = inputChannelsWithData.remove();
 				enqueuedInputChannelsWithData.clear(currentChannel.getChannelIndex());
+				// 不为空，表示还存在更多的Channel可读.
 				moreAvailable = !inputChannelsWithData.isEmpty();
 			}
 
@@ -633,7 +634,7 @@ public class SingleInputGate implements InputGate {
 
 			inputChannelsWithData.add(channel);
 			enqueuedInputChannelsWithData.set(channel.getChannelIndex());
-
+			// 新加入的Channel,若之前的大小为0,表示可能存在等待者，需唤醒等待者
 			if (availableChannels == 0) {
 				inputChannelsWithData.notifyAll();
 			}

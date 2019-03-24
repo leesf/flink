@@ -26,14 +26,17 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.apache.flink.streaming.api.functions.source.ParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.functions.windowing.AggregateApplyWindowFunction;
 import org.apache.flink.streaming.api.graph.StreamingJobGraphGenerator;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.examples.wordcount.util.WordCountData;
 import org.apache.flink.util.Collector;
@@ -129,6 +132,7 @@ public class WikipediaAnalysis {
 	public static class WikipediaEditEvent {
 		private String user;
 		private long byteDiff;
+		private long createTime;
 
 
 		public void setUser(String user) {
@@ -147,13 +151,21 @@ public class WikipediaAnalysis {
 			return byteDiff;
 		}
 
+		public void setCreateTime(long createTime) {
+			this.createTime = createTime;
+		}
+
+		public long getCreateTime() {
+			return createTime;
+		}
+
 
 
 
 	}
 
 	public static class WikipediaEditsSource extends RichSourceFunction<WikipediaEditEvent> implements
-		CheckpointedFunction {
+		ParallelSourceFunction<WikipediaEditEvent>, CheckpointedFunction {
 
 		@Override public void snapshotState(FunctionSnapshotContext context)
 			throws Exception {
@@ -170,6 +182,7 @@ public class WikipediaAnalysis {
 				WikipediaEditEvent editEvent = new WikipediaEditEvent();
 				editEvent.setByteDiff(1);
 				editEvent.setUser("leesf");
+				editEvent.setCreateTime(System.currentTimeMillis());
 				ctx.collect(editEvent);
 				try {
 					Thread.sleep(1000);
@@ -188,8 +201,9 @@ public class WikipediaAnalysis {
 	final static Logger LOGGER = LoggerFactory.getLogger(WikipediaAnalysis.class);
 	public static void main(String[] args) throws Exception {
 		StreamExecutionEnvironment see = StreamExecutionEnvironment.getExecutionEnvironment();
-		DataStream<WikipediaEditEvent> edits = see.addSource(new WikipediaEditsSource());
-		KeyedStream<WikipediaEditEvent, String> keyedEdits = edits
+		see.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+		DataStream<WikipediaEditEvent> edits = see.addSource(new WikipediaEditsSource()).setParallelism(2);
+		KeyedStream<WikipediaEditEvent, String> keyedEdits = edits.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessGenerator())
 			.keyBy(new KeySelector<WikipediaEditEvent, String>() {
 				@Override
 				public String getKey(WikipediaEditEvent event) {
@@ -197,8 +211,8 @@ public class WikipediaAnalysis {
 				}
 			});
 
-		DataStream<Tuple2<String, Long>> result = keyedEdits
-			.timeWindow(Time.seconds(5))
+		/*DataStream<Tuple2<String, Long>> result = keyedEdits
+			.window(TumblingEventTimeWindows.of(Time.seconds(5)))
 			.fold(new Tuple2<>("", 0L), new FoldFunction<WikipediaEditEvent, Tuple2<String, Long>>() {
 				@Override
 				public Tuple2<String, Long> fold(Tuple2<String, Long> acc, WikipediaEditEvent event) {
@@ -206,10 +220,10 @@ public class WikipediaAnalysis {
 					acc.f1 += event.getByteDiff();
 					return acc;
 				}
-			});
+			});*/
 
 		DataStream<Tuple2<String, Long>> result1 = keyedEdits
-			.timeWindow(Time.seconds(5))
+			.window(TumblingEventTimeWindows.of(Time.minutes(5)))
 			.aggregate(new AggregateFunction<WikipediaEditEvent, Tuple2<String, Long>, Tuple2<String, Long>>() {
 
 
@@ -239,8 +253,10 @@ public class WikipediaAnalysis {
 			});
 
 
-		result.print();
-		result1.print();
+		//result.print();
+		result1.print().setParallelism(3);
+
+		JobGraph jobGraph = see.getStreamGraph().getJobGraph();
 
 		see.execute();
 	}

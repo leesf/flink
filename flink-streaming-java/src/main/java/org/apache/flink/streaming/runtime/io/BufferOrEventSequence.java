@@ -29,6 +29,7 @@ import java.io.IOException;
  * This class represents a sequence of buffers and events which are blocked by
  * {@link CheckpointBarrierHandler}. The sequence of buffers and events can be
  * read back using the method {@link #getNext()}.
+ * 在进行checkpoint时保存的一些buffer和event
  */
 @Internal
 public interface BufferOrEventSequence {

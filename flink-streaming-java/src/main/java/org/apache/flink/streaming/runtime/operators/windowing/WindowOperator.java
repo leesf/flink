@@ -135,7 +135,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 	 * {@link OutputTag} to use for late arriving events. Elements for which
 	 * {@code window.maxTimestamp + allowedLateness} is smaller than the current watermark will
 	 * be emitted to this.
-	 * 记录迟到的元素，窗口结束时间+等待时间<watermark
+	 * 记录迟到的元素，窗口结束时间 + 等待时间 < watermark
 	 */
 	protected final OutputTag<IN> lateDataOutputTag;
 
@@ -296,6 +296,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 	@Override
 	public void processElement(StreamRecord<IN> element) throws Exception {
+		// 将多个窗口分配给该元素
 		final Collection<W> elementWindows = windowAssigner.assignWindows(
 			element.getValue(), element.getTimestamp(), windowAssignerContext);
 
@@ -382,7 +383,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 			// need to make sure to update the merging state in state
 			mergingWindows.persist();
-		} else {
+		} else { // 非merging window
 			for (W window: elementWindows) {
 
 				// drop if the window is already late
@@ -434,6 +435,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 		MergingWindowSet<W> mergingWindows;
 
+		// 可合并
 		if (windowAssigner instanceof MergingWindowAssigner) {
 			mergingWindows = getMergingWindowSet();
 			W stateWindow = mergingWindows.getStateWindow(triggerContext.window);
@@ -446,10 +448,11 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 				windowState.setCurrentNamespace(stateWindow);
 			}
 		} else {
+			// 不能合并的window
 			windowState.setCurrentNamespace(triggerContext.window);
 			mergingWindows = null;
 		}
-
+		// timer之前构造的timestamp即为window end time - 1
 		TriggerResult triggerResult = triggerContext.onEventTime(timer.getTimestamp());
 
 		if (triggerResult.isFire()) {
@@ -496,6 +499,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 			mergingWindows = null;
 		}
 
+		// 如果是processing time trigger，则会触发窗口计算
 		TriggerResult triggerResult = triggerContext.onProcessingTime(timer.getTimestamp());
 
 		if (triggerResult.isFire()) {
@@ -578,6 +582,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 	 * of the given window.
 	 */
 	protected boolean isWindowLate(W window) {
+		// 为事件事件并且窗口清理时间小于当前的watermark,则表示窗口已延迟
 		return (windowAssigner.isEventTime() && (cleanupTime(window) <= internalTimerService.currentWatermark()));
 	}
 
@@ -639,10 +644,13 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 	 * @param window the window whose cleanup time we are computing.
 	 */
 	private long cleanupTime(W window) {
+		// 为事件事件
 		if (windowAssigner.isEventTime()) {
+			// 获取该窗口应该被清理的时间(endTime - 1) + 延迟
 			long cleanupTime = window.maxTimestamp() + allowedLateness;
 			return cleanupTime >= window.maxTimestamp() ? cleanupTime : Long.MAX_VALUE;
 		} else {
+			// 非事件事件则返回窗口的endTime - 1
 			return window.maxTimestamp();
 		}
 	}

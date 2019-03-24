@@ -26,6 +26,7 @@ import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.JobVertex;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -73,7 +74,7 @@ public class WordCount {
 
 		@Override public void initializeState(FunctionInitializationContext context)
 			throws Exception {
-			LOGGER.info("initializeState.");
+			LOGGER.info("this is source do initializeState.");
 		}
 
 		@Override public void run(SourceContext ctx) throws Exception {
@@ -148,10 +149,12 @@ public class WordCount {
 
 		// set up the execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.enableCheckpointing(5000);
+
+		//env.enableCheckpointing(5000);
 
 		// make parameters available in the web interface
 		env.getConfig().setGlobalJobParameters(params);
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
 		// get input data
 		DataStream<String> text;

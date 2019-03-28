@@ -61,9 +61,10 @@ public class TimestampsAndPeriodicWatermarksOperator<T>
 
 	@Override
 	public void processElement(StreamRecord<T> element) throws Exception {
+		// 从用户提供的function中解析时间戳
 		final long newTimestamp = userFunction.extractTimestamp(element.getValue(),
 				element.hasTimestamp() ? element.getTimestamp() : Long.MIN_VALUE);
-
+		// 重新生成element(赋时间戳)
 		output.collect(element.replace(element.getValue(), newTimestamp));
 	}
 

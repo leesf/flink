@@ -47,7 +47,7 @@ public abstract class ProcessingTimeService {
 
 	/**
 	 * Registers a task to be executed when (processing) time is {@code timestamp}.
-	 *
+	 * 注册timer后只调用一次
 	 * @param timestamp   Time when the task is to be executed (in processing time)
 	 * @param target      The task to be executed
 	 *

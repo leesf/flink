@@ -41,6 +41,7 @@ import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 
 /**
@@ -134,7 +135,14 @@ public class WordCount {
 	// *************************************************************************
 	final static Logger LOGGER = LoggerFactory.getLogger(WordCount.class);
 	public static void main(String[] args) throws Exception {
-
+		/*ByteBuffer buffer = ByteBuffer.allocate(10);
+		System.out.println("limit " + buffer.limit() + ", position " + buffer.position() + ", capacity " + buffer.capacity());
+		buffer.position(0);
+		buffer.limit(0);
+		buffer.put(1, (byte)1);
+		buffer.put(2, (byte)2);
+		buffer.flip();
+		System.out.println("limit " + buffer.limit() + ", position " + buffer.position() + ", capacity " + buffer.capacity());*/
 		// Checking input parameters
 		final ParameterTool params = ParameterTool.fromArgs(args);
 
@@ -161,15 +169,14 @@ public class WordCount {
 
 		}
 
-		DataStream<Tuple2<String, Integer>> counts =
+		//DataStream<Tuple2<String, Integer>> counts =
 			// split up the lines in pairs (2-tuples) containing: (word,1)
-			text.flatMap(new Tokenizer()).setParallelism(256);
+		//	text.flatMap(new Tokenizer()).setParallelism(1);
 			// group by the tuple field "0" and sum up tuple field "1"
 			//.keyBy(0).sum(1).setParallelism(3);
-
 		// emit result
 		System.out.println("Printing result to stdout. Use --output to specify output path.");
-		counts.addSink(new CustomSink()).setParallelism(4);
+		text.flatMap(new Tokenizer()).setParallelism(1).addSink(new CustomSink()).setParallelism(2);
 		//text.addSink(new CustomSimpleSink()).setParallelism(2);
 
 		// execute program

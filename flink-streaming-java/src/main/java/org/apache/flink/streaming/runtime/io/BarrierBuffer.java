@@ -87,6 +87,7 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 	/**
 	 * The sequence of buffers/events that has been unblocked and must now be consumed before
 	 * requesting further data from the input gate.
+	 * 在从input gate消费到数据之前需要先被消费完
 	 */
 	private BufferOrEventSequence currentBuffered;
 
@@ -245,6 +246,7 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 		final long barrierId = receivedBarrier.getId();
 
 		// fast path for single channel cases
+		// 只有一个channel
 		if (totalNumberOfInputChannels == 1) {
 			if (barrierId > currentCheckpointId) {
 				// new checkpoint
@@ -255,12 +257,13 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 		}
 
 		// -- general code path for multiple input channels --
-
+		// 收到多个barriers
 		if (numBarriersReceived > 0) {
 			// this is only true if some alignment is already progress and was not canceled
-
+			// 当前barrierId和checkpointId相等
 			if (barrierId == currentCheckpointId) {
 				// regular case
+				// 标记为blocked
 				onBarrier(channelIndex);
 			}
 			else if (barrierId > currentCheckpointId) {
@@ -285,8 +288,10 @@ public class BarrierBuffer implements CheckpointBarrierHandler {
 				return;
 			}
 		}
+		// 收到的第一个barrier
 		else if (barrierId > currentCheckpointId) {
 			// first barrier of a new checkpoint
+			// 需开始进行对齐
 			beginNewAlignment(barrierId, channelIndex);
 		}
 		else {

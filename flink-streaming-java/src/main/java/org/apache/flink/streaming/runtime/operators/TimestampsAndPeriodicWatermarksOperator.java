@@ -61,22 +61,26 @@ public class TimestampsAndPeriodicWatermarksOperator<T>
 
 	@Override
 	public void processElement(StreamRecord<T> element) throws Exception {
+		// 从用户提供的function中解析时间戳
 		final long newTimestamp = userFunction.extractTimestamp(element.getValue(),
 				element.hasTimestamp() ? element.getTimestamp() : Long.MIN_VALUE);
-
+		// 重新生成element(赋时间戳)
 		output.collect(element.replace(element.getValue(), newTimestamp));
 	}
 
 	@Override
 	public void onProcessingTime(long timestamp) throws Exception {
 		// register next timer
+		// 获取到当前的watermark，用户自定义实现
 		Watermark newWatermark = userFunction.getCurrentWatermark();
+		// 从source解析的watermark大于当前的watermark则向下游发送watermark
 		if (newWatermark != null && newWatermark.getTimestamp() > currentWatermark) {
 			currentWatermark = newWatermark.getTimestamp();
 			// emit watermark
 			output.emitWatermark(newWatermark);
 		}
 
+		// 再次注册一个Timer，供下次获取watermark.
 		long now = getProcessingTimeService().getCurrentProcessingTime();
 		getProcessingTimeService().registerTimer(now + watermarkInterval, this);
 	}

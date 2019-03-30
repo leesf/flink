@@ -256,11 +256,16 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 		}
 	}
 
+	/**
+	 * 推进watermark
+	 * @param time
+	 * @throws Exception
+	 */
 	public void advanceWatermark(long time) throws Exception {
 		currentWatermark = time;
 
 		InternalTimer<K, N> timer;
-
+		// timer中的待触发时间小于当前的时间，则需要触发
 		while ((timer = eventTimeTimersQueue.peek()) != null && timer.getTimestamp() <= time) {
 			eventTimeTimersQueue.poll();
 			keyContext.setCurrentKey(timer.getKey());

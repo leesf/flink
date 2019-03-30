@@ -99,7 +99,7 @@ public class StatusWatermarkValve {
 			long watermarkMillis = watermark.getTimestamp();
 
 			// if the input watermark's value is less than the last received watermark for its input channel, ignore it also.
-			// 如果当前输入的watermark小于该channel的watermark，直接忽略；只处理大于的情况
+			// 如果当前输入的watermark小于该channel之前保存的watermark，直接忽略；只处理大于的情况
 			if (watermarkMillis > channelStatuses[channelIndex].watermark) {
 				channelStatuses[channelIndex].watermark = watermarkMillis;
 
@@ -126,15 +126,19 @@ public class StatusWatermarkValve {
 	 */
 	public void inputStreamStatus(StreamStatus streamStatus, int channelIndex) {
 		// only account for stream status inputs that will result in a status change for the input channel
+		// 将channel的状态置为idle并且当前channel状态为active
 		if (streamStatus.isIdle() && channelStatuses[channelIndex].streamStatus.isActive()) {
 			// handle active -> idle toggle for the input channel
+			// 设置为idle状态
 			channelStatuses[channelIndex].streamStatus = StreamStatus.IDLE;
 
 			// the channel is now idle, therefore not aligned
+			// 未对齐状态
 			channelStatuses[channelIndex].isWatermarkAligned = false;
 
 			// if all input channels of the valve are now idle, we need to output an idle stream
 			// status from the valve (this also marks the valve as idle)
+			// 所有的channel都是idle状态
 			if (!InputChannelStatus.hasActiveChannels(channelStatuses)) {
 
 				// now that all input channels are idle and no channels will continue to advance its watermark,
@@ -142,6 +146,7 @@ public class StatusWatermarkValve {
 				// the max watermark across all channels as the new watermark. Also, since we already try to advance
 				// the min watermark as channels individually become IDLE, here we only need to perform the flush
 				// if the watermark of the last active channel that just became idle is the current min watermark.
+				// 将指定的channel的watermark为上一次输出的watermark，找出最大的watermark输出
 				if (channelStatuses[channelIndex].watermark == lastOutputWatermark) {
 					findAndOutputMaxWatermarkAcrossAllChannels();
 				}
@@ -152,9 +157,11 @@ public class StatusWatermarkValve {
 				// if the watermark of the channel that just became idle equals the last output
 				// watermark (the previous overall min watermark), we may be able to find a new
 				// min watermark from the remaining aligned channels
+				// 有active的channel并且其watermark等于上次输出的watermark，则找出所有的已经对齐的所有channel的最小watermark(找一个新的最小的watermark)
 				findAndOutputNewMinWatermarkAcrossAlignedChannels();
 			}
 		} else if (streamStatus.isActive() && channelStatuses[channelIndex].streamStatus.isIdle()) {
+			// 将指定的channel从idle设置为active
 			// handle idle -> active toggle for the input channel
 			channelStatuses[channelIndex].streamStatus = StreamStatus.ACTIVE;
 
@@ -180,6 +187,7 @@ public class StatusWatermarkValve {
 		// determine new overall watermark by considering only watermark-aligned channels across all channels
 		for (InputChannelStatus channelStatus : channelStatuses) {
 			if (channelStatus.isWatermarkAligned) {
+				// 已对齐的channel,获取watermark
 				hasAlignedChannels = true;
 				newMinWatermark = Math.min(channelStatus.watermark, newMinWatermark);
 			}

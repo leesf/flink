@@ -164,7 +164,7 @@ public class LocalInputChannel extends InputChannel implements BufferAvailabilit
 	@Override
 	Optional<BufferAndAvailability> getNextBuffer() throws IOException, InterruptedException {
 		checkError();
-
+		// 读取上游算子写入的Buffer所依赖的对象
 		ResultSubpartitionView subpartitionView = this.subpartitionView;
 		if (subpartitionView == null) {
 			// There is a possible race condition between writing a EndOfPartitionEvent (1) and flushing (3) the Local

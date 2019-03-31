@@ -421,6 +421,7 @@ public class FlinkYarnSessionCli extends AbstractCustomCommandLine<ApplicationId
 		String jobManagerOption = commandLine.getOptionValue(addressOption.getOpt(), null);
 		boolean yarnJobManager = ID.equals(jobManagerOption);
 		boolean yarnAppId = commandLine.hasOption(applicationId.getOpt());
+		LOG.info("commandLine is {}, yarnJobManager is {}, yarnAppId is {}", commandLine, yarnJobManager, yarnAppId);
 		return yarnJobManager || yarnAppId || (isYarnPropertiesFileMode(commandLine) && yarnApplicationIdFromYarnProperties != null);
 	}
 

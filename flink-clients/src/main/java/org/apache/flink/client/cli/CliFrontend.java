@@ -248,6 +248,7 @@ public class CliFrontend {
 					LOG.info("Could not properly shut down the client.", e);
 				}
 			} else {
+				LOG.info("not detached way. clusterId is null ? {}, clusterId is {}, descriptor is {}", clusterId == null, clusterId, clusterDescriptor.getClusterDescription());
 				final Thread shutdownHook;
 				if (clusterId != null) {
 					client = clusterDescriptor.retrieve(clusterId);
@@ -256,6 +257,7 @@ public class CliFrontend {
 					// also in job mode we have to deploy a session cluster because the job
 					// might consist of multiple parts (e.g. when using collect)
 					final ClusterSpecification clusterSpecification = customCommandLine.getClusterSpecification(commandLine);
+					LOG.info("clusterSpecification is {}", clusterSpecification);
 					client = clusterDescriptor.deploySessionCluster(clusterSpecification);
 					// if not running in detached mode, add a shutdown hook to shut down cluster if client exits
 					// there's a race-condition here if cli is killed before shutdown hook is installed
@@ -1177,6 +1179,10 @@ public class CliFrontend {
 		config.setInteger(RestOptions.PORT, address.getPort());
 	}
 
+	static void setJobManagerPrecedence(Configuration config) {
+		config.setBoolean(JobManagerOptions.JOB_MANANGER_PRECEDENCE, true);
+	}
+
 	public static List<CustomCommandLine<?>> loadCustomCommandLines(Configuration configuration, String configurationDirectory) {
 		List<CustomCommandLine<?>> customCommandLines = new ArrayList<>(2);
 
@@ -1211,6 +1217,7 @@ public class CliFrontend {
 	 * @return custom command-line which is active (may only be one at a time)
 	 */
 	public CustomCommandLine<?> getActiveCustomCommandLine(CommandLine commandLine) {
+		LOG.info("customCommandLines is {}, size is {}", customCommandLines, customCommandLines.size());
 		for (CustomCommandLine<?> cli : customCommandLines) {
 			if (cli.isActive(commandLine)) {
 				return cli;

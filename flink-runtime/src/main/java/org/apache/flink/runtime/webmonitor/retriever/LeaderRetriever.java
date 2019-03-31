@@ -66,11 +66,14 @@ public class LeaderRetriever implements LeaderRetrievalListener {
 	 * Returns the current JobManagerGateway future.
 	 */
 	public CompletableFuture<Tuple2<String, UUID>> getLeaderFuture() {
+		log.info("getLeaderFuture {}", atomicLeaderFuture.get());
 		return atomicLeaderFuture.get();
 	}
 
 	@Override
 	public void notifyLeaderAddress(final String leaderAddress, final UUID leaderSessionID) {
+		log.info("notifyLeaderAddress is {}, leaderSessionID is {}", leaderAddress, leaderSessionID);
+
 		if (leaderAddress != null && !leaderAddress.equals("")) {
 			try {
 				final CompletableFuture<Tuple2<String, UUID>> newLeaderFuture = CompletableFuture.completedFuture(Tuple2.of(leaderAddress, leaderSessionID));

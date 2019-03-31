@@ -28,10 +28,13 @@ import org.apache.flink.util.Preconditions;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
 import static org.apache.flink.client.cli.CliFrontend.setJobManagerAddressInConfig;
+import static org.apache.flink.client.cli.CliFrontend.setJobManagerPrecedence;
 
 /**
  * Base class for {@link CustomCommandLine} implementations which specify a JobManager address and
@@ -39,6 +42,8 @@ import static org.apache.flink.client.cli.CliFrontend.setJobManagerAddressInConf
  *
  */
 public abstract class AbstractCustomCommandLine<T> implements CustomCommandLine<T> {
+
+	private final static Logger LOG = LoggerFactory.getLogger(AbstractCustomCommandLine.class);
 
 	protected final Option zookeeperNamespaceOption = new Option("z", "zookeeperNamespace", true,
 		"Namespace to create the Zookeeper sub-paths for high availability mode");
@@ -77,13 +82,14 @@ public abstract class AbstractCustomCommandLine<T> implements CustomCommandLine<
 	 */
 	protected Configuration applyCommandLineOptionsToConfiguration(CommandLine commandLine) throws FlinkException {
 		final Configuration resultingConfiguration = new Configuration(configuration);
-
+		LOG.info("before addressOption, resultingConfiguration is {}", resultingConfiguration);
 		if (commandLine.hasOption(addressOption.getOpt())) {
 			String addressWithPort = commandLine.getOptionValue(addressOption.getOpt());
 			InetSocketAddress jobManagerAddress = ClientUtils.parseHostPortAddress(addressWithPort);
 			setJobManagerAddressInConfig(resultingConfiguration, jobManagerAddress);
+			setJobManagerPrecedence(resultingConfiguration);
 		}
-
+		LOG.info("resultingConfiguration is {}", resultingConfiguration);
 		if (commandLine.hasOption(zookeeperNamespaceOption.getOpt())) {
 			String zkNamespace = commandLine.getOptionValue(zookeeperNamespaceOption.getOpt());
 			resultingConfiguration.setString(HighAvailabilityOptions.HA_CLUSTER_ID, zkNamespace);

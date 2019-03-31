@@ -22,6 +22,7 @@ import org.apache.flink.api.common.time.Deadline;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.runtime.util.ExecutorThreadFactory;
 import org.apache.flink.util.ExceptionUtils;
+import org.apache.flink.util.FutureUtil;
 import org.apache.flink.util.function.RunnableWithException;
 import org.apache.flink.util.function.SupplierWithException;
 
@@ -45,6 +46,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.concurrent.Future;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -54,6 +57,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * A collection of utilities that expand the usage of {@link CompletableFuture}.
  */
 public class FutureUtils {
+
+	private final static Logger LOG = LoggerFactory.getLogger(FutureUtil.class);
 
 	// ------------------------------------------------------------------------
 	//  retrying operations
@@ -341,7 +346,7 @@ public class FutureUtils {
 				}
 			});
 		}
-
+		LOG.info("future is {}", future);
 		return future;
 	}
 

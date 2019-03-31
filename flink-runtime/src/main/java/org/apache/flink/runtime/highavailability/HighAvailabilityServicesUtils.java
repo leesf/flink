@@ -19,10 +19,7 @@
 package org.apache.flink.runtime.highavailability;
 
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.HighAvailabilityOptions;
-import org.apache.flink.configuration.JobManagerOptions;
-import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.configuration.*;
 import org.apache.flink.runtime.blob.BlobStoreService;
 import org.apache.flink.runtime.blob.BlobUtils;
 import org.apache.flink.runtime.dispatcher.Dispatcher;
@@ -30,6 +27,7 @@ import org.apache.flink.runtime.highavailability.nonha.embedded.EmbeddedHaServic
 import org.apache.flink.runtime.highavailability.nonha.standalone.StandaloneHaServices;
 import org.apache.flink.runtime.highavailability.zookeeper.ZooKeeperHaServices;
 import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
+import org.apache.flink.runtime.jobmanager.JobManager;
 import org.apache.flink.runtime.jobmaster.JobMaster;
 import org.apache.flink.runtime.net.SSLUtils;
 import org.apache.flink.runtime.resourcemanager.ResourceManager;
@@ -39,6 +37,8 @@ import org.apache.flink.runtime.util.ZooKeeperUtils;
 import org.apache.flink.util.ConfigurationException;
 import org.apache.flink.util.FlinkException;
 import org.apache.flink.util.InstantiationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executor;
 
@@ -48,6 +48,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * Utils class to instantiate {@link HighAvailabilityServices} implementations.
  */
 public class HighAvailabilityServicesUtils {
+
+	private final static Logger LOG = LoggerFactory.getLogger(HighAvailabilityServicesUtils.class);
 
 	public static HighAvailabilityServices createAvailableOrEmbeddedServices(
 		Configuration config,
@@ -81,11 +83,14 @@ public class HighAvailabilityServicesUtils {
 		AddressResolution addressResolution) throws Exception {
 
 		HighAvailabilityMode highAvailabilityMode = LeaderRetrievalUtils.getRecoveryMode(configuration);
-
+		boolean jmPrecedence = configuration.getBoolean(JobManagerOptions.JOB_MANANGER_PRECEDENCE, false);
+		if (jmPrecedence) {
+			highAvailabilityMode = HighAvailabilityMode.NONE;
+		}
 		switch (highAvailabilityMode) {
 			case NONE:
 				final Tuple2<String, Integer> hostnamePort = getJobManagerAddress(configuration);
-
+				LOG.info("hostnamePort is {}", hostnamePort);
 				final String jobManagerRpcUrl = AkkaRpcServiceUtils.getRpcUrl(
 					hostnamePort.f0,
 					hostnamePort.f1,

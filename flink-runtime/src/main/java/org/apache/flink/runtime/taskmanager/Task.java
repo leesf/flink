@@ -702,7 +702,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 
 			// run the invokable
 			invokable.invoke();
-
+			LOG.info("invoke over......");
 			// make sure, we enter the catch block if the task leaves the invoke() method due
 			// to the fact that it has been canceled
 			if (isCanceledOrFailed()) {
@@ -722,6 +722,7 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 
 			// try to mark the task as finished
 			// if that fails, the task was canceled/failed in the meantime
+			LOG.info("from running to finished");
 			if (!transitionState(ExecutionState.RUNNING, ExecutionState.FINISHED)) {
 				throw new CancelTaskException();
 			}

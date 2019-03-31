@@ -172,6 +172,10 @@ public class JobManagerOptions {
 			.defaultValue(HeartbeatManagerOptions.HEARTBEAT_TIMEOUT.defaultValue())
 			.withDescription("The timeout in milliseconds for a idle slot in Slot Pool.");
 
+	public static final ConfigOption<Boolean> JOB_MANANGER_PRECEDENCE =
+		key("jobmanager.precedence")
+		.defaultValue(false)
+		.withDescription("The precedence in submitting a job to jobmanager by -m host:port");
 	// ---------------------------------------------------------------------------------------------
 
 	private JobManagerOptions() {

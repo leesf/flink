@@ -759,6 +759,7 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 				restClusterClientConfiguration.getAwaitLeaderTimeout(),
 				TimeUnit.MILLISECONDS)
 			.thenApplyAsync(leaderAddressSessionId -> {
+				log.info("leaderAddressSessionId is {}", leaderAddressSessionId);
 				final String url = leaderAddressSessionId.f0;
 				try {
 					return new URL(url);

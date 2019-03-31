@@ -26,6 +26,8 @@ import org.apache.flink.optimizer.dag.DataSinkNode;
 import org.apache.flink.optimizer.plandump.PlanJSONDumpGenerator;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.util.InstantiationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -59,6 +61,8 @@ import java.util.jar.Manifest;
  * a program plan.
  */
 public class PackagedProgram {
+
+	private static final Logger LOG = LoggerFactory.getLogger(PackagedProgram.class);
 
 	/**
 	 * Property name of the entry in JAR manifest file that describes the Flink specific entry point.
@@ -417,6 +421,7 @@ public class PackagedProgram {
 	 * will be a local execution by default.
 	 */
 	public void invokeInteractiveModeForExecution() throws ProgramInvocationException{
+		LOG.info("isUsingInteractiveMode is {}",isUsingInteractiveMode());
 		if (isUsingInteractiveMode()) {
 			callMainMethod(mainClass, args);
 		} else {

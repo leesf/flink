@@ -396,6 +396,7 @@ public abstract class ClusterClient<T> {
 	public JobSubmissionResult run(PackagedProgram prog, int parallelism)
 			throws ProgramInvocationException, ProgramMissingJobException {
 		Thread.currentThread().setContextClassLoader(prog.getUserCodeClassLoader());
+		log.info("usingProgramEntryPoint is {}", prog.isUsingProgramEntryPoint());
 		if (prog.isUsingProgramEntryPoint()) {
 
 			final JobWithJars jobWithJars;
@@ -404,7 +405,7 @@ public abstract class ClusterClient<T> {
 			} else {
 				jobWithJars = prog.getPlanWithJars();
 			}
-
+			log.info("isUsingProgramEntryPoint run..");
 			return run(jobWithJars, parallelism, prog.getSavepointSettings());
 		}
 		else if (prog.isUsingInteractiveMode()) {
@@ -428,6 +429,7 @@ public abstract class ClusterClient<T> {
 				if (lastJobExecutionResult == null && factory.getLastEnvCreated() == null) {
 					throw new ProgramMissingJobException("The program didn't contain a Flink job.");
 				}
+				log.info("isDetached ? {}", isDetached());
 				if (isDetached()) {
 					// in detached mode, we execute the whole user code to extract the Flink job, afterwards we run it here
 					return ((DetachedEnvironment) factory.getLastEnvCreated()).finalizeExecute();
@@ -484,6 +486,7 @@ public abstract class ClusterClient<T> {
 			List<URL> libraries, List<URL> classpaths, ClassLoader classLoader, SavepointRestoreSettings savepointSettings)
 			throws ProgramInvocationException {
 		JobGraph job = getJobGraph(flinkConfig, compiledPlan, libraries, classpaths, savepointSettings);
+		log.info("clusterclient submit job.");
 		return submitJob(job, classLoader);
 	}
 

@@ -26,8 +26,8 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.examples.wordcount.util.WordCountData;
 import org.apache.flink.util.Collector;
-/*import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;*/
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements the "WordCount" program that computes a simple word occurrence
@@ -46,9 +46,9 @@ import org.slf4j.LoggerFactory;*/
  * <li>write and use user-defined functions.
  * </ul>
  */
-public class WordCount {
+public class WordCountLeesf {
 
-	//private static final Logger LOG = LoggerFactory.getLogger(WordCount.class);
+	private static final Logger LOG = LoggerFactory.getLogger(WordCountLeesf.class);
 
 	// *************************************************************************
 	// PROGRAM
@@ -63,8 +63,7 @@ public class WordCount {
 				int size = WordCountData.WORDS.length;
 				for (int i = 0; i < size; i++)
 				{
-					//LOG.info("data is {}", WordCountData.WORDS[i]);
-					System.out.println("data is " + WordCountData.WORDS[i]);
+					LOG.info("data is {}", WordCountData.WORDS[i]);
 					ctx.collect(WordCountData.WORDS[i]);
 					try
 					{
@@ -77,8 +76,7 @@ public class WordCount {
 
 		@Override
 		public void cancel() {
-			//LOG.info("cancel job");
-			System.out.println("cancel job");
+			LOG.info("cancel job");
 			running = false;
 		}
 	}
@@ -87,8 +85,7 @@ public class WordCount {
 
 		@Override
 		public void invoke(Tuple2<String, Integer> value, Context context) throws Exception {
-			//LOG.info("invoke value is {}", value);
-			System.out.println("invoke value is " +  value);
+			LOG.info("invoke value is {}", value);
 		}
 	}
 
@@ -96,8 +93,6 @@ public class WordCount {
 
 		// Checking input parameters
 		final ParameterTool params = ParameterTool.fromArgs(args);
-
-		System.out.println("what the fuck..........");
 
 		// set up the execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();

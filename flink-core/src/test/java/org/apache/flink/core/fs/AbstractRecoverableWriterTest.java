@@ -136,7 +136,6 @@ public abstract class AbstractRecoverableWriterTest extends TestLogger {
 
 		try {
 			stream.write("THIS IS A TEST 1.".getBytes(StandardCharsets.UTF_8));
-			stream.close();
 			stream.closeForCommit().commit();
 			Iterator var6 = this.getFileContentByPath(testDir).entrySet().iterator();
 

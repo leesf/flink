@@ -22,9 +22,12 @@ import org.apache.flink.core.io.SimpleVersionedSerializer;
 import org.apache.flink.util.StringUtils;
 import org.apache.flink.util.TestLogger;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -137,9 +140,9 @@ public abstract class AbstractRecoverableWriterTest extends TestLogger {
 			stream.closeForCommit().commit();
 			Iterator var6 = this.getFileContentByPath(testDir).entrySet().iterator();
 
-			while(var6.hasNext()) {
-				Map.Entry<Path, String> fileContents = (Map.Entry)var6.next();
-				Assert.assertEquals("part-0", ((Path)fileContents.getKey()).getName());
+			while (var6.hasNext()) {
+				Map.Entry<Path, String> fileContents = (Map.Entry) var6.next();
+				Assert.assertEquals("part-0", ((Path) fileContents.getKey()).getName());
 				Assert.assertEquals("THIS IS A TEST 1.", fileContents.getValue());
 			}
 		} catch (Throwable var15) {
@@ -356,7 +359,6 @@ public abstract class AbstractRecoverableWriterTest extends TestLogger {
 		}
 	}
 
-
 	@Ignore
 	@Test(expected = IOException.class)
 	public void testExceptionWritingAfterCloseForCommit1() throws Exception {
@@ -393,8 +395,6 @@ public abstract class AbstractRecoverableWriterTest extends TestLogger {
 		}
 
 	}
-
-
 
 	@Test(expected = IOException.class)
 	public void testResumeAfterCommit() throws Exception {

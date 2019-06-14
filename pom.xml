@@ -102,7 +102,7 @@ under the License.
 		<flink.forkCountTestPackage>${flink.forkCount}</flink.forkCountTestPackage>
 		<flink.reuseForks>true</flink.reuseForks>
 		<log4j.configuration>log4j-test.properties</log4j.configuration>
-		<flink.shaded.version>7.0</flink.shaded.version>
+		<flink.shaded.version>6.0</flink.shaded.version>
 		<guava.version>18.0</guava.version>
 		<akka.version>2.5.21</akka.version>
 		<java.version>1.8</java.version>
@@ -121,7 +121,7 @@ under the License.
 		<chill.version>0.7.6</chill.version>
 		<zookeeper.version>3.4.10</zookeeper.version>
 		<curator.version>2.12.0</curator.version>
-		<jackson.version>2.9.8</jackson.version>
+		<jackson.version>2.7.9</jackson.version>
 		<metrics.version>3.1.5</metrics.version>
 		<prometheus.version>0.3.0</prometheus.version>
 		<avro.version>1.8.2</avro.version>
@@ -140,8 +140,6 @@ under the License.
 		-->
 		<minikdc.version>2.7.2</minikdc.version>
 		<generated.docs.dir>./docs/_includes/generated</generated.docs.dir>
-		<hive.version>2.3.4</hive.version>
-		<hivemetastore.hadoop.version>2.7.2</hivemetastore.hadoop.version>
 	</properties>
 
 	<dependencies>
@@ -593,7 +591,6 @@ under the License.
 
 			<!-- We have to define the versions for httpcore and httpclient here such that a consistent
 			 version is used by the shaded hadoop jars and the flink-yarn-test project because of MNG-5899.
-
 			 See FLINK-6836 for more details -->
 			<dependency>
 				<groupId>org.apache.httpcomponents</groupId>
@@ -692,6 +689,7 @@ under the License.
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>build-helper-maven-plugin</artifactId>
+						<version>1.12</version>
 						<executions>
 							<execution>
 								<id>regex-property</id>
@@ -745,11 +743,6 @@ under the License.
 			<build>
 				<pluginManagement>
 					<plugins>
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>build-helper-maven-plugin</artifactId>
-							<version>1.7</version>
-						</plugin>
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-shade-plugin</artifactId>
@@ -1043,7 +1036,7 @@ under the License.
 		</profile>
 
 		<profile>
-            <!-- Kept for backwards compatiblity, the doc buildbot expects
+			<!-- Kept for backwards compatiblity, the doc buildbot expects
                  this profile to exist.-->
 			<id>aggregate-scaladoc</id>
 		</profile>
@@ -1316,7 +1309,7 @@ under the License.
 						<!-- Test Data. -->
 						<exclude>**/src/test/resources/*-data</exclude>
 						<exclude>flink-tests/src/test/resources/testdata/terainput.txt</exclude>
-                        <exclude>flink-formats/flink-avro/src/test/resources/flink_11-kryo_registrations</exclude>
+						<exclude>flink-formats/flink-avro/src/test/resources/flink_11-kryo_registrations</exclude>
 						<exclude>flink-runtime/src/test/resources/flink_11-kryo_registrations</exclude>
 						<exclude>flink-core/src/test/resources/kryo-serializer-config-snapshot-v1</exclude>
 						<exclude>flink-formats/flink-avro/src/test/resources/avro/*.avsc</exclude>
@@ -1327,7 +1320,6 @@ under the License.
 						<exclude>flink-end-to-end-tests/test-scripts/docker-hadoop-secure-cluster/config/keystore.jks</exclude>
 						<exclude>flink-connectors/flink-connector-kafka/src/test/resources/**</exclude>
 						<exclude>flink-connectors/flink-connector-kafka-0.11/src/test/resources/**</exclude>
-						<exclude>flink-connectors/flink-connector-hive/src/test/resources/**</exclude>
 
 						<!-- snapshots -->
 						<exclude>**/src/test/resources/*-snapshot</exclude>

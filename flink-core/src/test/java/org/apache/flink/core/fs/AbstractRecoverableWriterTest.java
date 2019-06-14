@@ -22,14 +22,13 @@ import org.apache.flink.core.io.SimpleVersionedSerializer;
 import org.apache.flink.util.StringUtils;
 import org.apache.flink.util.TestLogger;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
@@ -119,7 +118,48 @@ public abstract class AbstractRecoverableWriterTest extends TestLogger {
 				Assert.assertEquals("part-0", fileContents.getKey().getName());
 				Assert.assertEquals(testData1, fileContents.getValue());
 			}
+		} catch (IOException e) {
+			throw e;
 		}
+	}
+
+	@Test
+	public void testCommitAfterNormalClose1() throws Exception {
+		RecoverableWriter writer = this.getNewFileSystemWriter();
+		Path testDir = this.getBasePathForTest();
+		Path path = new Path(testDir, "part-0");
+		RecoverableFsDataOutputStream stream = writer.open(path);
+		Throwable var5 = null;
+
+		try {
+			stream.write("THIS IS A TEST 1.".getBytes(StandardCharsets.UTF_8));
+			stream.close();
+			stream.closeForCommit().commit();
+			Iterator var6 = this.getFileContentByPath(testDir).entrySet().iterator();
+
+			while(var6.hasNext()) {
+				Map.Entry<Path, String> fileContents = (Map.Entry)var6.next();
+				Assert.assertEquals("part-0", ((Path)fileContents.getKey()).getName());
+				Assert.assertEquals("THIS IS A TEST 1.", fileContents.getValue());
+			}
+		} catch (Throwable var15) {
+			var5 = var15;
+			throw var15;
+		} finally {
+			if (stream != null) {
+				if (var5 != null) {
+					try {
+						stream.close();
+					} catch (Throwable var14) {
+						var5.addSuppressed(var14);
+					}
+				} else {
+					stream.close();
+				}
+			}
+
+		}
+
 	}
 
 	@Test
@@ -150,6 +190,22 @@ public abstract class AbstractRecoverableWriterTest extends TestLogger {
 	private static final String INTERM_WITH_STATE_PERSIST = "INTERM-STATE";
 	private static final String INTERM_WITH_NO_ADDITIONAL_STATE_PERSIST = "INTERM-IMEDIATE";
 	private static final String FINAL_WITH_EXTRA_STATE = "FINAL";
+
+	@Test
+	public void test() throws Exception {
+		int i = 0;
+		while (i < 500) {
+			try {
+				prepare();
+				testRecoverWithEmptyState();
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				cleanup();
+			}
+			i++;
+		}
+	}
 
 	@Test
 	public void testRecoverWithEmptyState() throws Exception {
@@ -295,8 +351,50 @@ public abstract class AbstractRecoverableWriterTest extends TestLogger {
 			stream.closeForCommit().getRecoverable();
 			stream.write(testData2.getBytes(StandardCharsets.UTF_8));
 			fail();
+		} catch (IOException e) {
+			throw e;
 		}
 	}
+
+
+	@Ignore
+	@Test(expected = IOException.class)
+	public void testExceptionWritingAfterCloseForCommit1() throws Exception {
+		Path testDir = this.getBasePathForTest();
+		RecoverableWriter writer = this.getNewFileSystemWriter();
+		Path path = new Path(testDir, "part-0");
+		RecoverableFsDataOutputStream stream = writer.open(path);
+		Throwable var5 = null;
+
+		try {
+			stream.write("THIS IS A TEST 1.".getBytes(StandardCharsets.UTF_8));
+			stream.close();
+			throw new IllegalArgumentException();
+			//stream.closeForCommit().getRecoverable();
+			//stream.write("THIS IS A TEST 2.".getBytes(StandardCharsets.UTF_8));
+			//Assert.fail();
+		} catch (Throwable var14) {
+			var5 = var14;
+			throw var14;
+		} finally {
+			if (stream != null) {
+				if (var5 != null) {
+					try {
+						stream.close();
+						throw new IllegalArgumentException();
+					} catch (Throwable var13) {
+						var13.addSuppressed(var5);
+					}
+				} else {
+					stream.close();
+
+				}
+			}
+		}
+
+	}
+
+
 
 	@Test(expected = IOException.class)
 	public void testResumeAfterCommit() throws Exception {

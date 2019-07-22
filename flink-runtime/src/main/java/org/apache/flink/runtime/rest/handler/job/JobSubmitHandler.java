@@ -39,6 +39,9 @@ import org.apache.flink.util.FlinkException;
 
 import org.apache.flink.shaded.netty4.io.netty.handler.codec.http.HttpResponseStatus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nonnull;
 
 import java.io.File;
@@ -56,6 +59,7 @@ import java.util.stream.Collectors;
  * This handler can be used to submit jobs to a Flink cluster.
  */
 public final class JobSubmitHandler extends AbstractRestHandler<DispatcherGateway, JobSubmitRequestBody, JobSubmitResponseBody, EmptyMessageParameters> {
+	private static final Logger LOG = LoggerFactory.getLogger(JobSubmitHandler.class);
 
 	private static final String FILE_TYPE_JOB_GRAPH = "JobGraph";
 	private static final String FILE_TYPE_JAR = "Jar";
@@ -82,7 +86,7 @@ public final class JobSubmitHandler extends AbstractRestHandler<DispatcherGatewa
 			File::getName,
 			Path::fromLocalFile
 		));
-
+		LOG.info("handleRequest in JobSubmitHandler...");
 		if (uploadedFiles.size() != nameToFile.size()) {
 			throw new RestHandlerException(
 				String.format("The number of uploaded files was %s than the expected count. Expected: %s Actual %s",

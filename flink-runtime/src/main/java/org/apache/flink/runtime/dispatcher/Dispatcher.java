@@ -905,6 +905,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 			Collection<CompletableFuture<?>> runFutures = new ArrayList<>(recoveredJobs.size());
 
 			for (JobGraph recoveredJob : recoveredJobs) {
+				log.info("tryAcceptLeadershipAndRunJobs...");
 				final CompletableFuture<?> runFuture = waitForTerminatingJobManager(recoveredJob.getJobID(), recoveredJob, this::runJob);
 				runFutures.add(runFuture);
 			}
@@ -1040,6 +1041,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId> impleme
 				log.debug("Ignore added JobGraph because the job {} is already running.", jobId);
 				return CompletableFuture.completedFuture(true);
 			} else if (runningJobsRegistry.getJobSchedulingStatus(jobId) != RunningJobsRegistry.JobSchedulingStatus.DONE) {
+				log.info("waitForTerminatingJobManager...");
 				return waitForTerminatingJobManager(jobId, jobGraph, this::runJob).thenApply(ignored -> true);
 			} else {
 				log.debug("Ignore added JobGraph because the job {} has already been completed.", jobId);

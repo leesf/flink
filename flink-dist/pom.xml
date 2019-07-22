@@ -628,6 +628,41 @@ under the License.
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.9</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>lib</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+							<excludeArtifactIds>
+								org.apache.flink:flink-examples-batch,
+								org.apache.flink:flink-examples-streaming,
+								org.apache.flink:flink-examples-streaming,
+								org.apache.flink:flink-python,
+								org.slf4j:slf4j-log4j12,
+								org.slf4j:slf4j-log4j12,
+								log4j:log4j
+							</excludeArtifactIds>
+							<excludeTypes>
+								SF,
+								DSA,
+								RSA
+							</excludeTypes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
 				<!-- Description: https://github.com/ktoso/maven-git-commit-id-plugin -->
 				<groupId>pl.project13.maven</groupId>
 				<artifactId>git-commit-id-plugin</artifactId>

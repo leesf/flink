@@ -843,7 +843,7 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
 
 				final String jobGraphFilename = "job.graph";
 				flinkConfiguration.setString(JOB_GRAPH_FILE_PATH, jobGraphFilename);
-
+				LOG.info("fp is {}, target is {}", fp.getAbsolutePath(), homeDir);
 				Path pathFromYarnURL = setupSingleLocalResource(
 					jobGraphFilename,
 					fs,

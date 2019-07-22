@@ -214,13 +214,14 @@ public class CliFrontend {
 			RunOptions runOptions,
 			PackagedProgram program) throws ProgramInvocationException, FlinkException {
 		final ClusterDescriptor<T> clusterDescriptor = customCommandLine.createClusterDescriptor(commandLine);
-
+		LOG.info("runProgram...");
 		try {
 			final T clusterId = customCommandLine.getClusterId(commandLine);
 
 			final ClusterClient<T> client;
 
 			// directly deploy the job if the cluster is started in job mode and detached
+			LOG.info("clusterId == null ? {}, runOptions.getDetachedMode() is {}", (clusterId == null), (runOptions.getDetachedMode()));
 			if (clusterId == null && runOptions.getDetachedMode()) {
 				int parallelism = runOptions.getParallelism() == -1 ? defaultParallelism : runOptions.getParallelism();
 

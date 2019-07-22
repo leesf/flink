@@ -24,6 +24,9 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.util.FlinkException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nonnull;
 
 import java.io.File;
@@ -38,6 +41,8 @@ import java.io.ObjectInputStream;
  */
 public class FileJobGraphRetriever implements JobGraphRetriever {
 
+	private static final Logger LOG = LoggerFactory.getLogger(FileJobGraphRetriever.class);
+
 	public static final ConfigOption<String> JOB_GRAPH_FILE_PATH = ConfigOptions
 		.key("internal.jobgraph-path")
 		.defaultValue("job.graph");
@@ -46,13 +51,14 @@ public class FileJobGraphRetriever implements JobGraphRetriever {
 	private final String jobGraphFile;
 
 	public FileJobGraphRetriever(@Nonnull String jobGraphFile) {
+		LOG.info("jobGraphFile is {}", jobGraphFile);
 		this.jobGraphFile = jobGraphFile;
 	}
 
 	@Override
 	public JobGraph retrieveJobGraph(Configuration configuration) throws FlinkException {
 		File fp = new File(jobGraphFile);
-
+		LOG.info("ft path is {}", fp.getAbsolutePath());
 		try (FileInputStream input = new FileInputStream(fp);
 			ObjectInputStream obInput = new ObjectInputStream(input)) {
 
